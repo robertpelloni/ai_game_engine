@@ -107,3 +107,26 @@ func TestRaycasting(t *testing.T) {
 		t.Errorf("Expected distance ~100, got %f", dist)
 	}
 }
+
+func TestDiagonalCollisionResolution(t *testing.T) {
+	reg := NewRegistry()
+	e1 := reg.CreateEntity()
+	e2 := reg.CreateEntity()
+
+	// Entities approaching diagonally
+	reg.AddPosition(e1, Position{X: 0, Y: 0})
+	reg.AddCollider(e1, Collider{Width: 10, Height: 10, Restitution: 0.0})
+	reg.AddVelocity(e1, Velocity{VX: 10, VY: 10})
+
+	reg.AddPosition(e2, Position{X: 8, Y: 8})
+	reg.AddCollider(e2, Collider{Width: 10, Height: 10, Static: true})
+
+	reg.UpdatePhysics(0)
+	reg.UpdateCollision(nil)
+
+	// One axis should be resolved
+	p1 := reg.Positions[e1]
+	if p1.X >= 0 && p1.Y >= 0 {
+		t.Errorf("Expected diagonal resolution to push e1 back, got (%f, %f)", p1.X, p1.Y)
+	}
+}

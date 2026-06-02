@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting AI Game Engine v0.0.6...")
+	fmt.Println("Starting AI Game Engine v0.0.7...")
 
 	// Initial mock schema
 	initialSchema := &schema.GameSchema{

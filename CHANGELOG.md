@@ -1,4 +1,9 @@
 # CHANGELOG
+## [0.0.7] - 2024-06-02
+- Implemented full-loop Integration Test Suite for the game engine.
+- Enhanced Physics test suite with diagonal collision resolution coverage.
+- Validated Scene Management and Registry clearing during transitions.
+
 ## [0.0.6] - 2024-06-02
 - Improved Spatial Grid with neighbor-cell checking for robust broad-phase collisions.
 - Implemented AABB Collision Resolution (separation and velocity reflection).
