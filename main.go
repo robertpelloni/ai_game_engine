@@ -24,8 +24,18 @@ func main() {
 				ID: 1,
 				Components: []schema.ComponentData{
 					{Type: "Position", Data: map[string]interface{}{"x": 0.0, "y": 0.0}},
-					{Type: "Velocity", Data: map[string]interface{}{"vx": 1.0, "vy": 0.0}},
+					{Type: "Velocity", Data: map[string]interface{}{"vx": 100.0, "vy": 0.0}},
 					{Type: "SpriteRenderer", Data: map[string]interface{}{"sprite_id": "player"}},
+					{Type: "Collider", Data: map[string]interface{}{"width": 10.0, "height": 10.0}},
+					{Type: "Health", Data: map[string]interface{}{"current": 100.0, "max": 100.0}},
+				},
+			},
+			{
+				ID: 2,
+				Components: []schema.ComponentData{
+					{Type: "Position", Data: map[string]interface{}{"x": 5.0, "y": 0.0}},
+					{Type: "Collider", Data: map[string]interface{}{"width": 10.0, "height": 10.0}},
+					{Type: "Health", Data: map[string]interface{}{"current": 50.0, "max": 50.0}},
 				},
 			},
 		},

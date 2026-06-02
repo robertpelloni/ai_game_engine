@@ -10,10 +10,10 @@ func (r *Registry) UpdatePhysics(dt float64) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	for e, v := range r.Velocities {
-		if p, ok := r.Positions[e]; ok {
-			p.X += v.VX * dt
-			p.Y += v.VY * dt
+	for i := 1; i < len(r.HasVelocity); i++ {
+		if r.HasVelocity[i] && r.HasPosition[i] {
+			r.Positions[i].X += r.Velocities[i].VX * dt
+			r.Positions[i].Y += r.Velocities[i].VY * dt
 		}
 	}
 }
@@ -22,8 +22,10 @@ func (r *Registry) UpdateBehavior() {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	for e, b := range r.AIBehaviors {
-		fmt.Printf("Executing behavior %s for entity %d\n", b.BehaviorType, e)
+	for i := 1; i < len(r.HasAIBehavior); i++ {
+		if r.HasAIBehavior[i] {
+			fmt.Printf("Executing behavior %s for entity %d\n", r.AIBehaviors[i].BehaviorType, i)
+		}
 	}
 }
 
@@ -31,28 +33,25 @@ func (r *Registry) UpdateCollision(rules []schema.EventAction) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	entities := make([]Entity, 0, len(r.Colliders))
-	for e := range r.Colliders {
-		entities = append(entities, e)
-	}
+	for i := 1; i < len(r.HasCollider); i++ {
+		if !r.HasCollider[i] || !r.HasPosition[i] {
+			continue
+		}
+		for j := i + 1; j < len(r.HasCollider); j++ {
+			if !r.HasCollider[j] || !r.HasPosition[j] {
+				continue
+			}
 
-	for i := 0; i < len(entities); i++ {
-		for j := i + 1; j < len(entities); j++ {
-			e1 := entities[i]
-			e2 := entities[j]
+			p1 := r.Positions[i]
+			p2 := r.Positions[j]
+			c1 := r.Colliders[i]
+			c2 := r.Colliders[j]
 
-			p1, ok1 := r.Positions[e1]
-			p2, ok2 := r.Positions[e2]
-			c1 := r.Colliders[e1]
-			c2 := r.Colliders[e2]
-
-			if ok1 && ok2 {
-				if p1.X < p2.X+c2.Width &&
-					p1.X+c1.Width > p2.X &&
-					p1.Y < p2.Y+c2.Height &&
-					p1.Y+c1.Height > p2.Y {
-					r.handleCollision(e1, e2, rules)
-				}
+			if p1.X < p2.X+c2.Width &&
+				p1.X+c1.Width > p2.X &&
+				p1.Y < p2.Y+c2.Height &&
+				p1.Y+c1.Height > p2.Y {
+				r.handleCollision(Entity(i), Entity(j), rules)
 			}
 		}
 	}
@@ -61,10 +60,21 @@ func (r *Registry) UpdateCollision(rules []schema.EventAction) {
 func (r *Registry) handleCollision(e1, e2 Entity, rules []schema.EventAction) {
 	for _, rule := range rules {
 		if strings.Contains(rule.Trigger, "COLLIDES_WITH") {
-			// Basic rule parsing logic
 			fmt.Printf("Collision detected between %d and %d. Rule Trigger: %s, Action: %s\n", e1, e2, rule.Trigger, rule.Action)
-			// Implementation of CALL SystemAction(Damage, 10) etc would go here
+			if rule.Action == "Damage" {
+				r.ApplyDamage(e1, 10)
+				r.ApplyDamage(e2, 10)
+			}
 		}
+	}
+}
+
+func (r *Registry) ApplyDamage(e Entity, amount float64) {
+	// Note: In a strict ECS, we might push an event or use a system,
+	// but here we modify health directly for simplicity.
+	if int(e) < len(r.HasHealth) && r.HasHealth[e] {
+		r.Healths[e].Current -= amount
+		fmt.Printf("Entity %d damaged. Health: %.2f/%.2f\n", e, r.Healths[e].Current, r.Healths[e].Max)
 	}
 }
 
@@ -72,9 +82,9 @@ func (r *Registry) UpdateRender() {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	for e, s := range r.Sprites {
-		if p, ok := r.Positions[e]; ok {
-			fmt.Printf("Rendering entity %d (sprite: %s) at (%.2f, %.2f)\n", e, s.SpriteID, p.X, p.Y)
+	for i := 1; i < len(r.HasSprite); i++ {
+		if r.HasSprite[i] && r.HasPosition[i] {
+			fmt.Printf("Rendering entity %d (sprite: %s) at (%.2f, %.2f)\n", i, r.Sprites[i].SpriteID, r.Positions[i].X, r.Positions[i].Y)
 		}
 	}
 }

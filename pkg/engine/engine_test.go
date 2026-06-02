@@ -31,7 +31,7 @@ func TestPatchRegistry(t *testing.T) {
 
 	PatchRegistry(reg, s)
 
-	if p, ok := reg.Positions[ecs.Entity(1)]; !ok || p.X != 100 || p.Y != 200 {
+	if !reg.HasPosition[1] || reg.Positions[1].X != 100 || reg.Positions[1].Y != 200 {
 		t.Errorf("Failed to patch position correctly")
 	}
 }

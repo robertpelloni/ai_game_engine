@@ -7,11 +7,12 @@ type Entity uint32
 type ComponentType string
 
 const (
-	PositionType ComponentType = "Position"
-	VelocityType ComponentType = "Velocity"
-	SpriteType   ComponentType = "SpriteRenderer"
-	ColliderType ComponentType = "Collider"
+	PositionType   ComponentType = "Position"
+	VelocityType   ComponentType = "Velocity"
+	SpriteType     ComponentType = "SpriteRenderer"
+	ColliderType   ComponentType = "Collider"
 	AIBehaviorType ComponentType = "AIBehavior"
+	HealthType     ComponentType = "Health"
 )
 
 type Position struct {
@@ -34,26 +35,65 @@ type AIBehavior struct {
 	BehaviorType string
 }
 
-type Registry struct {
-	mu sync.RWMutex
-	nextID uint32
-	entities map[Entity]bool
+type Health struct {
+	Current, Max float64
+}
 
-	Positions  map[Entity]*Position
-	Velocities map[Entity]*Velocity
-	Sprites    map[Entity]*SpriteRenderer
-	Colliders  map[Entity]*Collider
-	AIBehaviors map[Entity]*AIBehavior
+type Registry struct {
+	mu     sync.RWMutex
+	nextID uint32
+
+	// Contiguous memory for components
+	Positions   []Position
+	Velocities  []Velocity
+	Sprites     []SpriteRenderer
+	Colliders   []Collider
+	AIBehaviors []AIBehavior
+	Healths     []Health
+
+	// Presence bitsets (using bool slices for simplicity in Go)
+	HasPosition   []bool
+	HasVelocity   []bool
+	HasSprite     []bool
+	HasCollider   []bool
+	HasAIBehavior []bool
+	HasHealth     []bool
 }
 
 func NewRegistry() *Registry {
 	return &Registry{
-		entities:    make(map[Entity]bool),
-		Positions:   make(map[Entity]*Position),
-		Velocities:  make(map[Entity]*Velocity),
-		Sprites:     make(map[Entity]*SpriteRenderer),
-		Colliders:   make(map[Entity]*Collider),
-		AIBehaviors: make(map[Entity]*AIBehavior),
+		Positions:     make([]Position, 0),
+		Velocities:    make([]Velocity, 0),
+		Sprites:       make([]SpriteRenderer, 0),
+		Colliders:     make([]Collider, 0),
+		AIBehaviors:   make([]AIBehavior, 0),
+		Healths:       make([]Health, 0),
+		HasPosition:   make([]bool, 0),
+		HasVelocity:   make([]bool, 0),
+		HasSprite:     make([]bool, 0),
+		HasCollider:   make([]bool, 0),
+		HasAIBehavior: make([]bool, 0),
+		HasHealth:     make([]bool, 0),
+	}
+}
+
+func (r *Registry) ensureCapacity(id uint32) {
+	if int(id) >= len(r.HasPosition) {
+		newSize := int(id) + 1
+		// Grow all slices
+		r.Positions = append(r.Positions, make([]Position, newSize-len(r.Positions))...)
+		r.Velocities = append(r.Velocities, make([]Velocity, newSize-len(r.Velocities))...)
+		r.Sprites = append(r.Sprites, make([]SpriteRenderer, newSize-len(r.Sprites))...)
+		r.Colliders = append(r.Colliders, make([]Collider, newSize-len(r.Colliders))...)
+		r.AIBehaviors = append(r.AIBehaviors, make([]AIBehavior, newSize-len(r.AIBehaviors))...)
+		r.Healths = append(r.Healths, make([]Health, newSize-len(r.Healths))...)
+
+		r.HasPosition = append(r.HasPosition, make([]bool, newSize-len(r.HasPosition))...)
+		r.HasVelocity = append(r.HasVelocity, make([]bool, newSize-len(r.HasVelocity))...)
+		r.HasSprite = append(r.HasSprite, make([]bool, newSize-len(r.HasSprite))...)
+		r.HasCollider = append(r.HasCollider, make([]bool, newSize-len(r.HasCollider))...)
+		r.HasAIBehavior = append(r.HasAIBehavior, make([]bool, newSize-len(r.HasAIBehavior))...)
+		r.HasHealth = append(r.HasHealth, make([]bool, newSize-len(r.HasHealth))...)
 	}
 }
 
@@ -61,37 +101,55 @@ func (r *Registry) CreateEntity() Entity {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.nextID++
-	id := Entity(r.nextID)
-	r.entities[id] = true
-	return id
+	id := r.nextID
+	r.ensureCapacity(id)
+	return Entity(id)
 }
 
-func (r *Registry) AddPosition(e Entity, p *Position) {
+func (r *Registry) AddPosition(e Entity, p Position) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.ensureCapacity(uint32(e))
 	r.Positions[e] = p
+	r.HasPosition[e] = true
 }
 
-func (r *Registry) AddVelocity(e Entity, v *Velocity) {
+func (r *Registry) AddVelocity(e Entity, v Velocity) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.ensureCapacity(uint32(e))
 	r.Velocities[e] = v
+	r.HasVelocity[e] = true
 }
 
-func (r *Registry) AddSprite(e Entity, s *SpriteRenderer) {
+func (r *Registry) AddSprite(e Entity, s SpriteRenderer) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.ensureCapacity(uint32(e))
 	r.Sprites[e] = s
+	r.HasSprite[e] = true
 }
 
-func (r *Registry) AddCollider(e Entity, c *Collider) {
+func (r *Registry) AddCollider(e Entity, c Collider) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.ensureCapacity(uint32(e))
 	r.Colliders[e] = c
+	r.HasCollider[e] = true
 }
 
-func (r *Registry) AddAIBehavior(e Entity, b *AIBehavior) {
+func (r *Registry) AddAIBehavior(e Entity, b AIBehavior) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	r.ensureCapacity(uint32(e))
 	r.AIBehaviors[e] = b
+	r.HasAIBehavior[e] = true
+}
+
+func (r *Registry) AddHealth(e Entity, h Health) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.ensureCapacity(uint32(e))
+	r.Healths[e] = h
+	r.HasHealth[e] = true
 }
