@@ -12,15 +12,17 @@ func NewGrid(cellSize float64) *Grid {
 	}
 }
 
-func (g *Grid) GetCellIndex(x, y float64) int {
-	// Simple 2D to 1D mapping
-	ix := int(x / g.CellSize)
-	iy := int(y / g.CellSize)
+func (g *Grid) GetCellIndex(ix, iy int) int {
 	return ix*10000 + iy
 }
 
+func (g *Grid) GetCoords(x, y float64) (int, int) {
+	return int(x / g.CellSize), int(y / g.CellSize)
+}
+
 func (g *Grid) Insert(e Entity, x, y float64) {
-	idx := g.GetCellIndex(x, y)
+	ix, iy := g.GetCoords(x, y)
+	idx := g.GetCellIndex(ix, iy)
 	g.Cells[idx] = append(g.Cells[idx], e)
 }
 
@@ -31,8 +33,16 @@ func (g *Grid) Clear() {
 }
 
 func (g *Grid) GetNearby(x, y float64) []Entity {
-	idx := g.GetCellIndex(x, y)
-	// For simplicity, just return the current cell.
-	// A better version would check 8 neighbors.
-	return g.Cells[idx]
+	ix, iy := g.GetCoords(x, y)
+	var nearby []Entity
+
+	for dx := -1; dx <= 1; dx++ {
+		for dy := -1; dy <= 1; dy++ {
+			idx := g.GetCellIndex(ix+dx, iy+dy)
+			if entities, ok := g.Cells[idx]; ok {
+				nearby = append(nearby, entities...)
+			}
+		}
+	}
+	return nearby
 }

@@ -30,6 +30,8 @@ type SpriteRenderer struct {
 
 type Collider struct {
 	Width, Height float64
+	Restitution   float64 // 0 for no bounce, 1 for perfect bounce
+	Static        bool    // If true, the object doesn't move on collision
 }
 
 type AIBehavior struct {

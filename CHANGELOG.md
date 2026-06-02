@@ -1,4 +1,11 @@
 # CHANGELOG
+## [0.0.6] - 2024-06-02
+- Improved Spatial Grid with neighbor-cell checking for robust broad-phase collisions.
+- Implemented AABB Collision Resolution (separation and velocity reflection).
+- Added `Static` and `Restitution` properties to `Collider` component.
+- Implemented high-performance Raycasting system using the spatial grid.
+- Expanded Rule Engine with "Stop" action.
+
 ## [0.0.5] - 2024-06-02
 - Enhanced Physics layer with global Gravity support.
 - Added comprehensive unit tests for the Physics simulation.

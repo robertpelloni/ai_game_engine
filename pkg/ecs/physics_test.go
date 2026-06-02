@@ -67,3 +67,43 @@ func TestNoVelocityNoMovement(t *testing.T) {
 		t.Errorf("Entity moved without velocity component: got (%f, %f)", p.X, p.Y)
 	}
 }
+
+func TestCollisionResolution(t *testing.T) {
+	reg := NewRegistry()
+	e1 := reg.CreateEntity()
+	e2 := reg.CreateEntity()
+
+	reg.AddPosition(e1, Position{X: 0, Y: 0})
+	reg.AddCollider(e1, Collider{Width: 10, Height: 10, Restitution: 0.5})
+	reg.AddVelocity(e1, Velocity{VX: 10, VY: 0})
+
+	reg.AddPosition(e2, Position{X: 8, Y: 0})
+	reg.AddCollider(e2, Collider{Width: 10, Height: 10, Static: true})
+
+	reg.UpdatePhysics(0)
+	reg.UpdateCollision(nil)
+
+	if reg.Positions[e1].X >= 0 {
+		t.Errorf("Expected e1 to be pushed back, got X=%f", reg.Positions[e1].X)
+	}
+	if reg.Velocities[e1].VX >= 0 {
+		t.Errorf("Expected e1 velocity to be reflected, got VX=%f", reg.Velocities[e1].VX)
+	}
+}
+
+func TestRaycasting(t *testing.T) {
+	reg := NewRegistry()
+	e := reg.CreateEntity()
+	reg.AddPosition(e, Position{X: 100, Y: 100})
+	reg.AddCollider(e, Collider{Width: 10, Height: 10})
+
+	reg.UpdatePhysics(0)
+
+	hit, dist := reg.Raycast(0, 105, 1, 0, 200)
+	if hit != e {
+		t.Errorf("Expected to hit entity %d, got %d", e, hit)
+	}
+	if dist < 90 || dist > 110 {
+		t.Errorf("Expected distance ~100, got %f", dist)
+	}
+}

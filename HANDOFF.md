@@ -1,20 +1,20 @@
 # HANDOFF
 
 ## Session Summary
-In this session, I reinforced the engine's core by adding gravity support to the physics layer, implementing a robust scene management system, and adding comprehensive physics unit tests.
+In this session, I completed the physics simulation module by implementing robust collision resolution and a high-performance raycasting system. The engine now correctly handles physical interactions between assets.
 
 ## Accomplishments
-1. **Gravity Support**: Added `GravityX` and `GravityY` to the ECS `Registry`. The `UpdatePhysics` system now applies these forces to all entities with a `Velocity` component.
-2. **Scene Management**: Created `pkg/scene` which handles `Scene` definitions and a `SceneManager` for loading, unloading, and transitioning between scenes.
-3. **Physics Testing**: Added `pkg/ecs/physics_test.go` verifying linear motion, gravity application, and ensuring static entities remain stationary.
-4. **Integration**: The JSON patcher now synchronizes global world properties like gravity from the schema.
+1. **Collision Resolution**: Implemented AABB-based separation and velocity reflection. The engine now supports `Static` colliders (immovable) and `Restitution` (bounciness).
+2. **Raycasting**: Added a spatial-grid-accelerated raycasting system for efficient line-of-sight and targeting checks.
+3. **Robust Broad-phase**: Improved the spatial grid to check neighboring cells, ensuring no collisions are missed at cell boundaries.
+4. **Enhanced Rule Engine**: Added support for "Stop" actions and native physics-based "Bounce" via resolution.
 
 ## Architecture Highlights
-- `pkg/scene/manager.go`: Orchestrates scene transitions by resetting the ECS registry and applying new schemas.
-- `pkg/ecs/systems.go`: Physics loop now correctly simulates accelerated motion.
-- `pkg/engine/patcher.go`: World-level properties are now properly hydrated from the data-driven schema.
+- `pkg/ecs/grid.go`: Updated `GetNearby` to perform a 3x3 cell search.
+- `pkg/ecs/systems.go`: Added `resolveCollision`, `reflectVelocity`, and `Raycast` methods to the `Registry`.
+- `pkg/ecs/physics_test.go`: Expanded to cover new physical behaviors and raycasting accuracy.
 
 ## Future Steps
-- Implement Ebitengine renderer to visualize the physics and combat systems.
-- Enhance the Scene Manager to support partial scene loading (streaming).
-- Expand the combat system to include projectile components and systems.
+- Visualizing these interactions using Ebitengine.
+- Implementing a "Trigger" component for non-physical overlaps (e.g., area-of-effect zones).
+- Refactoring the raycasting system to support multi-hit and layer filtering.
