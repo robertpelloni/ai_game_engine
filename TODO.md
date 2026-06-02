@@ -7,6 +7,7 @@
 - [x] Implement spatial partitioning (v0.0.3)
 - [x] Implement combat state machine (v0.0.3)
 - [x] Add engine submodules (Godot, Ebitengine) (v0.0.4)
+- [x] Implement Scene Management (v0.0.5)
 - [ ] Integrate Ebitengine for 2D visual output
 - [ ] Implement Godot GDExtension bridge for 3D scenarios
 - [ ] Integrate actual asset generation API

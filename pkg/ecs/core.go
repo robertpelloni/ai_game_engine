@@ -52,6 +52,10 @@ type Registry struct {
 	mu     sync.RWMutex
 	nextID uint32
 
+	// Global Physics Properties
+	GravityX float64
+	GravityY float64
+
 	// Contiguous memory for components
 	Positions    []Position
 	Velocities   []Velocity

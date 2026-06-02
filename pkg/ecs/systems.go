@@ -13,9 +13,15 @@ func (r *Registry) UpdatePhysics(dt float64) {
 	r.SpatialGrid.Clear()
 
 	for i := 1; i < len(r.HasVelocity); i++ {
-		if r.HasVelocity[i] && r.HasPosition[i] {
-			r.Positions[i].X += r.Velocities[i].VX * dt
-			r.Positions[i].Y += r.Velocities[i].VY * dt
+		if r.HasVelocity[i] {
+			// Apply Gravity
+			r.Velocities[i].VX += r.GravityX * dt
+			r.Velocities[i].VY += r.GravityY * dt
+
+			if r.HasPosition[i] {
+				r.Positions[i].X += r.Velocities[i].VX * dt
+				r.Positions[i].Y += r.Velocities[i].VY * dt
+			}
 		}
 		if r.HasPosition[i] {
 			r.SpatialGrid.Insert(Entity(i), r.Positions[i].X, r.Positions[i].Y)

@@ -6,5 +6,6 @@
 - Phase 5: Spatial Partitioning and Performance Optimization (Complete)
 - Phase 6: Combat Systems and Frame-State Machines (Complete)
 - Phase 7: Engine Integration (Godot & Ebitengine Submodules Added)
-- Phase 8: Dynamic Asset Generation Integration
-- Phase 9: Advanced Rule Engine and Scripting
+- Phase 8: Scene Management and State Persistence (Initial Implementation)
+- Phase 9: Dynamic Asset Generation Integration
+- Phase 10: Advanced Rule Engine and Scripting

@@ -1,4 +1,10 @@
 # CHANGELOG
+## [0.0.5] - 2024-06-02
+- Enhanced Physics layer with global Gravity support.
+- Added comprehensive unit tests for the Physics simulation.
+- Implemented Scene Management (Loading, Unloading, Transitions).
+- Expanded Registry and Patcher to support gravity sync.
+
 ## [0.0.4] - 2024-06-02
 - Integrated Godot Engine, Ebitengine, and Godot-cpp as submodules for future rendering and GDExtension support.
 - Organized third-party dependencies under `third_party/`.

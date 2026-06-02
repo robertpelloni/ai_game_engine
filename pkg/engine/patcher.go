@@ -7,6 +7,12 @@ import (
 )
 
 func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
+	// Sync World Gravity
+	if len(s.World.Gravity) >= 2 {
+		registry.GravityX = s.World.Gravity[0]
+		registry.GravityY = s.World.Gravity[1]
+	}
+
 	for _, entitySpec := range s.Entities {
 		e := ecs.Entity(entitySpec.ID)
 
