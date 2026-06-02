@@ -74,11 +74,11 @@ func TestCollisionResolution(t *testing.T) {
 	e2 := reg.CreateEntity()
 
 	reg.AddPosition(e1, Position{X: 0, Y: 0})
-	reg.AddCollider(e1, Collider{Width: 10, Height: 10, Restitution: 0.5})
+	reg.AddCollider(e1, Collider{Width: 10, Height: 10, Restitution: 0.5, Layer: 1, Mask: 1})
 	reg.AddVelocity(e1, Velocity{VX: 10, VY: 0})
 
 	reg.AddPosition(e2, Position{X: 8, Y: 0})
-	reg.AddCollider(e2, Collider{Width: 10, Height: 10, Static: true})
+	reg.AddCollider(e2, Collider{Width: 10, Height: 10, Static: true, Layer: 1, Mask: 1})
 
 	reg.UpdatePhysics(0)
 	reg.UpdateCollision(nil)
@@ -108,6 +108,21 @@ func TestRaycasting(t *testing.T) {
 	}
 }
 
+func TestDamping(t *testing.T) {
+	reg := NewRegistry()
+	reg.Damping = 0.5
+	e := reg.CreateEntity()
+	reg.AddPosition(e, Position{0, 0})
+	reg.AddVelocity(e, Velocity{10, 10})
+
+	reg.UpdatePhysics(1.0)
+
+	v := reg.Velocities[e]
+	if v.VX != 5 || v.VY != 5 {
+		t.Errorf("Expected dampened velocity (5, 5), got (%f, %f)", v.VX, v.VY)
+	}
+}
+
 func TestDiagonalCollisionResolution(t *testing.T) {
 	reg := NewRegistry()
 	e1 := reg.CreateEntity()
@@ -115,11 +130,11 @@ func TestDiagonalCollisionResolution(t *testing.T) {
 
 	// Entities approaching diagonally
 	reg.AddPosition(e1, Position{X: 0, Y: 0})
-	reg.AddCollider(e1, Collider{Width: 10, Height: 10, Restitution: 0.0})
+	reg.AddCollider(e1, Collider{Width: 10, Height: 10, Restitution: 0.0, Layer: 1, Mask: 1})
 	reg.AddVelocity(e1, Velocity{VX: 10, VY: 10})
 
 	reg.AddPosition(e2, Position{X: 8, Y: 8})
-	reg.AddCollider(e2, Collider{Width: 10, Height: 10, Static: true})
+	reg.AddCollider(e2, Collider{Width: 10, Height: 10, Static: true, Layer: 1, Mask: 1})
 
 	reg.UpdatePhysics(0)
 	reg.UpdateCollision(nil)

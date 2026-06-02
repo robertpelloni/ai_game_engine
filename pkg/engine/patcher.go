@@ -24,12 +24,22 @@ func getString(data map[string]interface{}, key string) string {
 	return ""
 }
 
+func getUint32(data map[string]interface{}, key string) uint32 {
+	if val, ok := data[key]; ok {
+		if f, ok := val.(float64); ok {
+			return uint32(f)
+		}
+	}
+	return 0
+}
+
 func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
-	// Sync World Gravity
+	// Sync World Physics
 	if len(s.World.Gravity) >= 2 {
 		registry.GravityX = s.World.Gravity[0]
 		registry.GravityY = s.World.Gravity[1]
 	}
+	// Note: We could add damping/friction to schema.WorldConfig if needed.
 
 	for _, entitySpec := range s.Entities {
 		e := ecs.Entity(entitySpec.ID)
@@ -62,6 +72,9 @@ func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
 					Height:      getFloat(data, "height"),
 					Restitution: getFloat(data, "restitution"),
 					Static:      data["static"] == true,
+					Layer:       getUint32(data, "layer"),
+					Mask:        getUint32(data, "mask"),
+					IsTrigger:   data["is_trigger"] == true,
 				})
 			case "AIBehavior":
 				registry.AddAIBehavior(e, ecs.AIBehavior{

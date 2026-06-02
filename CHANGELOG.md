@@ -1,4 +1,10 @@
 # CHANGELOG
+## [0.0.8] - 2024-06-02
+- Implemented Collision Filtering via `Layer` and `Mask` bitmasks.
+- Added `IsTrigger` support to skip collision resolution while keeping event triggers.
+- Implemented global velocity `Damping` in the physics system.
+- Enhanced JSON Patcher to support advanced physics properties.
+
 ## [0.0.7] - 2024-06-02
 - Implemented full-loop Integration Test Suite for the game engine.
 - Enhanced Physics test suite with diagonal collision resolution coverage.

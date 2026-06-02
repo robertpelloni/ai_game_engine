@@ -32,6 +32,9 @@ type Collider struct {
 	Width, Height float64
 	Restitution   float64 // 0 for no bounce, 1 for perfect bounce
 	Static        bool    // If true, the object doesn't move on collision
+	Layer         uint32  // Collision layer bitmask
+	Mask          uint32  // Collision mask bitmask
+	IsTrigger     bool    // If true, collision resolution is skipped
 }
 
 type AIBehavior struct {
@@ -57,6 +60,8 @@ type Registry struct {
 	// Global Physics Properties
 	GravityX float64
 	GravityY float64
+	Damping  float64 // Global velocity damping (0 to 1)
+	Friction float64 // Surface friction (not yet fully implemented in resolution)
 
 	// Contiguous memory for components
 	Positions    []Position
@@ -96,6 +101,7 @@ func NewRegistry() *Registry {
 		HasHealth:     make([]bool, 0),
 		HasCombatState: make([]bool, 0),
 		SpatialGrid:   NewGrid(100.0),
+		Damping:       1.0, // Default: no damping
 	}
 }
 

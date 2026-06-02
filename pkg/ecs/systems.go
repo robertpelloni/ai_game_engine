@@ -19,6 +19,10 @@ func (r *Registry) UpdatePhysics(dt float64) {
 			r.Velocities[i].VX += r.GravityX * dt
 			r.Velocities[i].VY += r.GravityY * dt
 
+			// Apply Damping
+			r.Velocities[i].VX *= r.Damping
+			r.Velocities[i].VY *= r.Damping
+
 			if r.HasPosition[i] {
 				r.Positions[i].X += r.Velocities[i].VX * dt
 				r.Positions[i].Y += r.Velocities[i].VY * dt
@@ -94,8 +98,19 @@ func (r *Registry) UpdateCollision(rules []schema.EventAction) {
 				continue
 			}
 
+			c1 := r.Colliders[i]
+			c2 := r.Colliders[j]
+
+			// Layer/Mask Filtering
+			if (c1.Layer&c2.Mask) == 0 && (c2.Layer&c1.Mask) == 0 {
+				continue
+			}
+
 			if r.checkAABB(i, j) {
-				r.resolveCollision(i, j)
+				// Only resolve if NEITHER is a trigger
+				if !c1.IsTrigger && !c2.IsTrigger {
+					r.resolveCollision(i, j)
+				}
 				r.handleCollision(Entity(i), Entity(j), rules)
 			}
 		}

@@ -9,5 +9,6 @@
 - Phase 8: Scene Management and State Persistence (Complete)
 - Phase 9: Physics Module: Collision Resolution and Raycasting (Complete)
 - Phase 10: Testing & Stability: Integration Test Suite (Complete)
-- Phase 11: Dynamic Asset Generation Integration
-- Phase 12: Advanced Rule Engine and Scripting
+- Phase 11: Advanced Physics: Filtering and Triggers (Complete)
+- Phase 12: Dynamic Asset Generation Integration
+- Phase 13: Advanced Rule Engine and Scripting
