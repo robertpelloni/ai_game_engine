@@ -1,0 +1,14 @@
+# TODO
+- [x] Define JSON schema
+- [x] Implement ECS core
+- [x] Implement basic systems
+- [x] Implement style triggers
+- [x] Implement hot-reloading
+- [x] Implement spatial partitioning (v0.0.3)
+- [x] Implement combat state machine (v0.0.3)
+- [x] Add engine submodules (Godot, Ebitengine) (v0.0.4)
+- [ ] Integrate Ebitengine for 2D visual output
+- [ ] Implement Godot GDExtension bridge for 3D scenarios
+- [ ] Integrate actual asset generation API
+- [ ] Implement complex rule parsing (e.g., scripted behaviors)
+- [ ] Implement multi-threaded system updates
