@@ -13,6 +13,7 @@ const (
 	ColliderType   ComponentType = "Collider"
 	AIBehaviorType ComponentType = "AIBehavior"
 	HealthType     ComponentType = "Health"
+	CombatStateType ComponentType = "CombatState"
 )
 
 type Position struct {
@@ -39,25 +40,37 @@ type Health struct {
 	Current, Max float64
 }
 
+type CombatState struct {
+	State         string // "Startup", "Active", "Recovery", "Idle"
+	FramesLeft    int
+	StartupFrames  int
+	ActiveFrames   int
+	RecoveryFrames int
+}
+
 type Registry struct {
 	mu     sync.RWMutex
 	nextID uint32
 
 	// Contiguous memory for components
-	Positions   []Position
-	Velocities  []Velocity
-	Sprites     []SpriteRenderer
-	Colliders   []Collider
-	AIBehaviors []AIBehavior
-	Healths     []Health
+	Positions    []Position
+	Velocities   []Velocity
+	Sprites      []SpriteRenderer
+	Colliders    []Collider
+	AIBehaviors  []AIBehavior
+	Healths      []Health
+	CombatStates []CombatState
 
-	// Presence bitsets (using bool slices for simplicity in Go)
-	HasPosition   []bool
-	HasVelocity   []bool
-	HasSprite     []bool
-	HasCollider   []bool
-	HasAIBehavior []bool
-	HasHealth     []bool
+	// Presence bitsets
+	HasPosition    []bool
+	HasVelocity    []bool
+	HasSprite      []bool
+	HasCollider    []bool
+	HasAIBehavior  []bool
+	HasHealth      []bool
+	HasCombatState []bool
+
+	SpatialGrid *Grid
 }
 
 func NewRegistry() *Registry {
@@ -68,25 +81,28 @@ func NewRegistry() *Registry {
 		Colliders:     make([]Collider, 0),
 		AIBehaviors:   make([]AIBehavior, 0),
 		Healths:       make([]Health, 0),
+		CombatStates:  make([]CombatState, 0),
 		HasPosition:   make([]bool, 0),
 		HasVelocity:   make([]bool, 0),
 		HasSprite:     make([]bool, 0),
 		HasCollider:   make([]bool, 0),
 		HasAIBehavior: make([]bool, 0),
 		HasHealth:     make([]bool, 0),
+		HasCombatState: make([]bool, 0),
+		SpatialGrid:   NewGrid(100.0),
 	}
 }
 
 func (r *Registry) ensureCapacity(id uint32) {
 	if int(id) >= len(r.HasPosition) {
 		newSize := int(id) + 1
-		// Grow all slices
 		r.Positions = append(r.Positions, make([]Position, newSize-len(r.Positions))...)
 		r.Velocities = append(r.Velocities, make([]Velocity, newSize-len(r.Velocities))...)
 		r.Sprites = append(r.Sprites, make([]SpriteRenderer, newSize-len(r.Sprites))...)
 		r.Colliders = append(r.Colliders, make([]Collider, newSize-len(r.Colliders))...)
 		r.AIBehaviors = append(r.AIBehaviors, make([]AIBehavior, newSize-len(r.AIBehaviors))...)
 		r.Healths = append(r.Healths, make([]Health, newSize-len(r.Healths))...)
+		r.CombatStates = append(r.CombatStates, make([]CombatState, newSize-len(r.CombatStates))...)
 
 		r.HasPosition = append(r.HasPosition, make([]bool, newSize-len(r.HasPosition))...)
 		r.HasVelocity = append(r.HasVelocity, make([]bool, newSize-len(r.HasVelocity))...)
@@ -94,6 +110,7 @@ func (r *Registry) ensureCapacity(id uint32) {
 		r.HasCollider = append(r.HasCollider, make([]bool, newSize-len(r.HasCollider))...)
 		r.HasAIBehavior = append(r.HasAIBehavior, make([]bool, newSize-len(r.HasAIBehavior))...)
 		r.HasHealth = append(r.HasHealth, make([]bool, newSize-len(r.HasHealth))...)
+		r.HasCombatState = append(r.HasCombatState, make([]bool, newSize-len(r.HasCombatState))...)
 	}
 }
 
@@ -152,4 +169,12 @@ func (r *Registry) AddHealth(e Entity, h Health) {
 	r.ensureCapacity(uint32(e))
 	r.Healths[e] = h
 	r.HasHealth[e] = true
+}
+
+func (r *Registry) AddCombatState(e Entity, s CombatState) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.ensureCapacity(uint32(e))
+	r.CombatStates[e] = s
+	r.HasCombatState[e] = true
 }

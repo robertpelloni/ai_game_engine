@@ -46,6 +46,15 @@ func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
 					Current: data["current"].(float64),
 					Max:     data["max"].(float64),
 				})
+			case "CombatState":
+				data := comp.Data.(map[string]interface{})
+				registry.AddCombatState(e, ecs.CombatState{
+					State:          data["state"].(string),
+					FramesLeft:     int(data["frames_left"].(float64)),
+					StartupFrames:  int(data["startup_frames"].(float64)),
+					ActiveFrames:   int(data["active_frames"].(float64)),
+					RecoveryFrames: int(data["recovery_frames"].(float64)),
+				})
 			default:
 				log.Printf("Unknown component type: %s", comp.Type)
 			}

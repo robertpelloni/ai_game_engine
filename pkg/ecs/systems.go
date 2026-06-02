@@ -7,13 +7,18 @@ import (
 )
 
 func (r *Registry) UpdatePhysics(dt float64) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.SpatialGrid.Clear()
 
 	for i := 1; i < len(r.HasVelocity); i++ {
 		if r.HasVelocity[i] && r.HasPosition[i] {
 			r.Positions[i].X += r.Velocities[i].VX * dt
 			r.Positions[i].Y += r.Velocities[i].VY * dt
+		}
+		if r.HasPosition[i] {
+			r.SpatialGrid.Insert(Entity(i), r.Positions[i].X, r.Positions[i].Y)
 		}
 	}
 }
@@ -29,6 +34,39 @@ func (r *Registry) UpdateBehavior() {
 	}
 }
 
+func (r *Registry) UpdateCombat() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for i := 1; i < len(r.HasCombatState); i++ {
+		if !r.HasCombatState[i] {
+			continue
+		}
+
+		cs := &r.CombatStates[i]
+		if cs.State == "Idle" {
+			continue
+		}
+
+		cs.FramesLeft--
+		if cs.FramesLeft <= 0 {
+			switch cs.State {
+			case "Startup":
+				cs.State = "Active"
+				cs.FramesLeft = cs.ActiveFrames
+				fmt.Printf("Entity %d: Combat Active!\n", i)
+			case "Active":
+				cs.State = "Recovery"
+				cs.FramesLeft = cs.RecoveryFrames
+				fmt.Printf("Entity %d: Combat Recovery...\n", i)
+			case "Recovery":
+				cs.State = "Idle"
+				fmt.Printf("Entity %d: Combat Idle.\n", i)
+			}
+		}
+	}
+}
+
 func (r *Registry) UpdateCollision(rules []schema.EventAction) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -37,7 +75,15 @@ func (r *Registry) UpdateCollision(rules []schema.EventAction) {
 		if !r.HasCollider[i] || !r.HasPosition[i] {
 			continue
 		}
-		for j := i + 1; j < len(r.HasCollider); j++ {
+
+		// Broad-phase using Spatial Grid
+		nearby := r.SpatialGrid.GetNearby(r.Positions[i].X, r.Positions[i].Y)
+
+		for _, otherID := range nearby {
+			j := int(otherID)
+			if i >= j {
+				continue
+			}
 			if !r.HasCollider[j] || !r.HasPosition[j] {
 				continue
 			}
@@ -70,8 +116,6 @@ func (r *Registry) handleCollision(e1, e2 Entity, rules []schema.EventAction) {
 }
 
 func (r *Registry) ApplyDamage(e Entity, amount float64) {
-	// Note: In a strict ECS, we might push an event or use a system,
-	// but here we modify health directly for simplicity.
 	if int(e) < len(r.HasHealth) && r.HasHealth[e] {
 		r.Healths[e].Current -= amount
 		fmt.Printf("Entity %d damaged. Health: %.2f/%.2f\n", e, r.Healths[e].Current, r.Healths[e].Max)

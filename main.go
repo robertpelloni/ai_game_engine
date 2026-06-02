@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting AI Game Engine...")
+	fmt.Println("Starting AI Game Engine v0.0.3...")
 
 	// Initial mock schema
 	initialSchema := &schema.GameSchema{
@@ -28,6 +28,9 @@ func main() {
 					{Type: "SpriteRenderer", Data: map[string]interface{}{"sprite_id": "player"}},
 					{Type: "Collider", Data: map[string]interface{}{"width": 10.0, "height": 10.0}},
 					{Type: "Health", Data: map[string]interface{}{"current": 100.0, "max": 100.0}},
+					{Type: "CombatState", Data: map[string]interface{}{
+						"state": "Startup", "frames_left": 2.0, "startup_frames": 2.0, "active_frames": 3.0, "recovery_frames": 2.0,
+					}},
 				},
 			},
 			{
@@ -42,7 +45,7 @@ func main() {
 		Rules: []schema.EventAction{
 			{Trigger: "COLLIDES_WITH", Action: "Damage"},
 		},
-		StyleKeywords: []string{"Retro Raycaster"},
+		StyleKeywords: []string{"Retro Raycaster", "Souls Combat"},
 	}
 
 	registry := ecs.NewRegistry()
@@ -70,9 +73,10 @@ func main() {
 
 	// Main game loop
 	dt := 0.016
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		fmt.Printf("\n--- Frame %d ---\n", i)
 		registry.UpdatePhysics(dt)
+		registry.UpdateCombat()
 		registry.UpdateBehavior()
 		registry.UpdateCollision(initialSchema.Rules)
 		registry.UpdateRender()
