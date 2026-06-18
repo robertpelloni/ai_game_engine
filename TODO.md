@@ -15,4 +15,4 @@
 - [ ] Implement Godot GDExtension bridge for 3D scenarios
 - [ ] Integrate actual asset generation API
 - [ ] Implement complex rule parsing (e.g., scripted behaviors)
-- [ ] Implement multi-threaded system updates
+- [x] Implement multi-threaded system updates (v0.0.10)

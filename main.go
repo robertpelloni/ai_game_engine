@@ -30,8 +30,8 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
 
-	// RLock not available
-	// RUnlock not available
+	g.registry.Mu.RLock()
+	defer g.registry.Mu.RUnlock()
 
 	// Very basic rendering loop over entities that have both a Position and Collider/Sprite
 	for i := 1; i < len(g.registry.HasPosition); i++ {
@@ -64,7 +64,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	fmt.Println("Starting AI Game Engine v0.0.9...")
+	fmt.Println("Starting AI Game Engine v0.0.10...")
 
 	// Initial mock schema
 	initialSchema := &schema.GameSchema{
@@ -131,7 +131,7 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("AI Game Engine 0.0.9")
+	ebiten.SetWindowTitle("AI Game Engine 0.0.10")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}

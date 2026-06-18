@@ -1,4 +1,8 @@
 # CHANGELOG
+## [0.0.10] - 2024-06-02
+- Implemented multi-threaded system updates using goroutines and sync.WaitGroup.
+- Parallelized UpdatePhysics (excluding grid insert), UpdateCombat, and UpdateBehavior.
+
 ## [0.0.9] - 2024-06-02
 - Integrated Ebitengine for 2D visual output.
 - Replaced dummy console loop with a functional 60 TPS Ebitengine game loop.

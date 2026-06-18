@@ -1,6 +1,9 @@
 package ecs
 
 import (
+	"sync"
+	"runtime"
+
 	"fmt"
 	"github.com/robertpelloni/ai_game_engine/pkg/schema"
 	"math"
@@ -8,26 +11,56 @@ import (
 )
 
 func (r *Registry) UpdatePhysics(dt float64) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 
 	r.SpatialGrid.Clear()
 
-	for i := 1; i < len(r.HasVelocity); i++ {
-		if r.HasVelocity[i] {
-			// Apply Gravity
-			r.Velocities[i].VX += r.GravityX * dt
-			r.Velocities[i].VY += r.GravityY * dt
+	numWorkers := runtime.NumCPU()
+	totalEntities := len(r.HasVelocity)
+	if totalEntities <= 1 {
+		return
+	}
 
-			// Apply Damping
-			r.Velocities[i].VX *= r.Damping
-			r.Velocities[i].VY *= r.Damping
+	chunkSize := totalEntities / numWorkers
+	if chunkSize == 0 {
+		chunkSize = 1
+	}
 
-			if r.HasPosition[i] {
-				r.Positions[i].X += r.Velocities[i].VX * dt
-				r.Positions[i].Y += r.Velocities[i].VY * dt
-			}
+	var wg sync.WaitGroup
+
+	// Phase 1: Update positions concurrently
+	for i := 1; i < totalEntities; i += chunkSize {
+		end := i + chunkSize
+		if end > totalEntities {
+			end = totalEntities
 		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for j := start; j < end; j++ {
+				if r.HasVelocity[j] {
+					// Apply Gravity
+					r.Velocities[j].VX += r.GravityX * dt
+					r.Velocities[j].VY += r.GravityY * dt
+
+					// Apply Damping
+					r.Velocities[j].VX *= r.Damping
+					r.Velocities[j].VY *= r.Damping
+
+					if j < len(r.HasPosition) && r.HasPosition[j] {
+						r.Positions[j].X += r.Velocities[j].VX * dt
+						r.Positions[j].Y += r.Velocities[j].VY * dt
+					}
+				}
+			}
+		}(i, end)
+	}
+	wg.Wait()
+
+	// Phase 2: Update spatial grid sequentially (grid is not thread-safe)
+	for i := 1; i < len(r.HasPosition); i++ {
 		if r.HasPosition[i] {
 			r.SpatialGrid.Insert(Entity(i), r.Positions[i].X, r.Positions[i].Y)
 		}
@@ -35,52 +68,102 @@ func (r *Registry) UpdatePhysics(dt float64) {
 }
 
 func (r *Registry) UpdateBehavior() {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.Mu.RLock()
+	defer r.Mu.RUnlock()
 
-	for i := 1; i < len(r.HasAIBehavior); i++ {
-		if r.HasAIBehavior[i] {
-			fmt.Printf("Executing behavior %s for entity %d\n", r.AIBehaviors[i].BehaviorType, i)
-		}
+	numWorkers := runtime.NumCPU()
+	totalEntities := len(r.HasAIBehavior)
+	if totalEntities <= 1 {
+		return
 	}
+
+	chunkSize := totalEntities / numWorkers
+	if chunkSize == 0 {
+		chunkSize = 1
+	}
+
+	var wg sync.WaitGroup
+
+	for i := 1; i < totalEntities; i += chunkSize {
+		end := i + chunkSize
+		if end > totalEntities {
+			end = totalEntities
+		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for j := start; j < end; j++ {
+				if r.HasAIBehavior[j] {
+					fmt.Printf("Executing behavior %s for entity %d\n", r.AIBehaviors[j].BehaviorType, j)
+				}
+			}
+		}(i, end)
+	}
+	wg.Wait()
 }
 
 func (r *Registry) UpdateCombat() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 
-	for i := 1; i < len(r.HasCombatState); i++ {
-		if !r.HasCombatState[i] {
-			continue
-		}
-
-		cs := &r.CombatStates[i]
-		if cs.State == "Idle" {
-			continue
-		}
-
-		cs.FramesLeft--
-		if cs.FramesLeft <= 0 {
-			switch cs.State {
-			case "Startup":
-				cs.State = "Active"
-				cs.FramesLeft = cs.ActiveFrames
-				fmt.Printf("Entity %d: Combat Active!\n", i)
-			case "Active":
-				cs.State = "Recovery"
-				cs.FramesLeft = cs.RecoveryFrames
-				fmt.Printf("Entity %d: Combat Recovery...\n", i)
-			case "Recovery":
-				cs.State = "Idle"
-				fmt.Printf("Entity %d: Combat Idle.\n", i)
-			}
-		}
+	numWorkers := runtime.NumCPU()
+	totalEntities := len(r.HasCombatState)
+	if totalEntities == 0 {
+		return
 	}
+
+	chunkSize := totalEntities / numWorkers
+	if chunkSize == 0 {
+		chunkSize = 1
+	}
+
+	var wg sync.WaitGroup
+
+	for i := 1; i < totalEntities; i += chunkSize {
+		end := i + chunkSize
+		if end > totalEntities {
+			end = totalEntities
+		}
+
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			for j := start; j < end; j++ {
+				if !r.HasCombatState[j] {
+					continue
+				}
+
+				cs := &r.CombatStates[j]
+				if cs.State == "Idle" {
+					continue
+				}
+
+				cs.FramesLeft--
+				if cs.FramesLeft <= 0 {
+					switch cs.State {
+					case "Startup":
+						cs.State = "Active"
+						cs.FramesLeft = cs.ActiveFrames
+						fmt.Printf("Entity %d: Combat Active!\n", j)
+					case "Active":
+						cs.State = "Recovery"
+						cs.FramesLeft = cs.RecoveryFrames
+						fmt.Printf("Entity %d: Combat Recovery...\n", j)
+					case "Recovery":
+						cs.State = "Idle"
+						fmt.Printf("Entity %d: Combat Idle.\n", j)
+					}
+				}
+			}
+		}(i, end)
+	}
+	wg.Wait()
 }
 
 func (r *Registry) UpdateCollision(rules []schema.EventAction) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 
 	for i := 1; i < len(r.HasCollider); i++ {
 		if !r.HasCollider[i] || !r.HasPosition[i] {
@@ -222,8 +305,8 @@ func (r *Registry) ApplyDamage(e Entity, amount float64) {
 }
 
 func (r *Registry) UpdateRender() {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.Mu.RLock()
+	defer r.Mu.RUnlock()
 
 	for i := 1; i < len(r.HasSprite); i++ {
 		if r.HasSprite[i] && r.HasPosition[i] {
@@ -233,8 +316,8 @@ func (r *Registry) UpdateRender() {
 }
 
 func (r *Registry) Raycast(x, y, dx, dy float64, maxDist float64) (Entity, float64) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.Mu.RLock()
+	defer r.Mu.RUnlock()
 
 	// Normalize direction
 	mag := math.Sqrt(dx*dx + dy*dy)
