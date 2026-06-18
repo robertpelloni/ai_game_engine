@@ -1,4 +1,38 @@
 # CHANGELOG
+## [0.0.9] - 2024-06-02
+- Integrated Ebitengine for 2D visual output.
+- Replaced dummy console loop with a functional 60 TPS Ebitengine game loop.
+- Added basic entity rendering using filled rectangles in Ebitengine.
+- Fixed mutex lock issues in ECS to allow safe concurrent rendering.
+
+## [0.0.8] - 2024-06-02
+- Implemented Collision Filtering via `Layer` and `Mask` bitmasks.
+- Added `IsTrigger` support to skip collision resolution while keeping event triggers.
+- Implemented global velocity `Damping` in the physics system.
+- Enhanced JSON Patcher to support advanced physics properties.
+
+## [0.0.7] - 2024-06-02
+- Implemented full-loop Integration Test Suite for the game engine.
+- Enhanced Physics test suite with diagonal collision resolution coverage.
+- Validated Scene Management and Registry clearing during transitions.
+
+## [0.0.6] - 2024-06-02
+- Improved Spatial Grid with neighbor-cell checking for robust broad-phase collisions.
+- Implemented AABB Collision Resolution (separation and velocity reflection).
+- Added `Static` and `Restitution` properties to `Collider` component.
+- Implemented high-performance Raycasting system using the spatial grid.
+- Expanded Rule Engine with "Stop" action.
+
+## [0.0.5] - 2024-06-02
+- Enhanced Physics layer with global Gravity support.
+- Added comprehensive unit tests for the Physics simulation.
+- Implemented Scene Management (Loading, Unloading, Transitions).
+- Expanded Registry and Patcher to support gravity sync.
+
+## [0.0.4] - 2024-06-02
+- Integrated Godot Engine, Ebitengine, and Godot-cpp as submodules for future rendering and GDExtension support.
+- Organized third-party dependencies under `third_party/`.
+
 ## [0.0.3] - 2024-06-02
 - Implemented Grid-based Spatial Partitioning for optimized broad-phase collision detection.
 - Added Souls-like Combat State Machine (Startup, Active, Recovery frames).

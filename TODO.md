@@ -6,7 +6,13 @@
 - [x] Implement hot-reloading
 - [x] Implement spatial partitioning (v0.0.3)
 - [x] Implement combat state machine (v0.0.3)
+- [x] Add engine submodules (Godot, Ebitengine) (v0.0.4)
+- [x] Implement Scene Management (v0.0.5)
+- [x] Implement Collision Resolution and Raycasting (v0.0.6)
+- [x] Implement Integration Test Suite (v0.0.7)
+- [x] Implement Collision Filtering and Triggers (v0.0.8)
+- [x] Integrate Ebitengine for 2D visual output (v0.0.9)
+- [ ] Implement Godot GDExtension bridge for 3D scenarios
 - [ ] Integrate actual asset generation API
 - [ ] Implement complex rule parsing (e.g., scripted behaviors)
 - [ ] Implement multi-threaded system updates
-- [ ] Add 2D Rendering library (e.g., Ebitengine)

@@ -6,54 +6,92 @@ import (
 	"log"
 )
 
+func getFloat(data map[string]interface{}, key string) float64 {
+	if val, ok := data[key]; ok {
+		if f, ok := val.(float64); ok {
+			return f
+		}
+	}
+	return 0
+}
+
+func getString(data map[string]interface{}, key string) string {
+	if val, ok := data[key]; ok {
+		if s, ok := val.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+func getUint32(data map[string]interface{}, key string) uint32 {
+	if val, ok := data[key]; ok {
+		if f, ok := val.(float64); ok {
+			return uint32(f)
+		}
+	}
+	return 0
+}
+
 func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
+	// Sync World Physics
+	if len(s.World.Gravity) >= 2 {
+		registry.GravityX = s.World.Gravity[0]
+		registry.GravityY = s.World.Gravity[1]
+	}
+	// Note: We could add damping/friction to schema.WorldConfig if needed.
+
 	for _, entitySpec := range s.Entities {
 		e := ecs.Entity(entitySpec.ID)
 
 		for _, comp := range entitySpec.Components {
+			data, ok := comp.Data.(map[string]interface{})
+			if !ok {
+				log.Printf("Invalid component data for entity %d type %s", entitySpec.ID, comp.Type)
+				continue
+			}
+
 			switch comp.Type {
 			case "Position":
-				data := comp.Data.(map[string]interface{})
 				registry.AddPosition(e, ecs.Position{
-					X: data["x"].(float64),
-					Y: data["y"].(float64),
+					X: getFloat(data, "x"),
+					Y: getFloat(data, "y"),
 				})
 			case "Velocity":
-				data := comp.Data.(map[string]interface{})
 				registry.AddVelocity(e, ecs.Velocity{
-					VX: data["vx"].(float64),
-					VY: data["vy"].(float64),
+					VX: getFloat(data, "vx"),
+					VY: getFloat(data, "vy"),
 				})
 			case "SpriteRenderer":
-				data := comp.Data.(map[string]interface{})
 				registry.AddSprite(e, ecs.SpriteRenderer{
-					SpriteID: data["sprite_id"].(string),
+					SpriteID: getString(data, "sprite_id"),
 				})
 			case "Collider":
-				data := comp.Data.(map[string]interface{})
 				registry.AddCollider(e, ecs.Collider{
-					Width:  data["width"].(float64),
-					Height: data["height"].(float64),
+					Width:       getFloat(data, "width"),
+					Height:      getFloat(data, "height"),
+					Restitution: getFloat(data, "restitution"),
+					Static:      data["static"] == true,
+					Layer:       getUint32(data, "layer"),
+					Mask:        getUint32(data, "mask"),
+					IsTrigger:   data["is_trigger"] == true,
 				})
 			case "AIBehavior":
-				data := comp.Data.(map[string]interface{})
 				registry.AddAIBehavior(e, ecs.AIBehavior{
-					BehaviorType: data["behavior_type"].(string),
+					BehaviorType: getString(data, "behavior_type"),
 				})
 			case "Health":
-				data := comp.Data.(map[string]interface{})
 				registry.AddHealth(e, ecs.Health{
-					Current: data["current"].(float64),
-					Max:     data["max"].(float64),
+					Current: getFloat(data, "current"),
+					Max:     getFloat(data, "max"),
 				})
 			case "CombatState":
-				data := comp.Data.(map[string]interface{})
 				registry.AddCombatState(e, ecs.CombatState{
-					State:          data["state"].(string),
-					FramesLeft:     int(data["frames_left"].(float64)),
-					StartupFrames:  int(data["startup_frames"].(float64)),
-					ActiveFrames:   int(data["active_frames"].(float64)),
-					RecoveryFrames: int(data["recovery_frames"].(float64)),
+					State:          getString(data, "state"),
+					FramesLeft:     int(getFloat(data, "frames_left")),
+					StartupFrames:  int(getFloat(data, "startup_frames")),
+					ActiveFrames:   int(getFloat(data, "active_frames")),
+					RecoveryFrames: int(getFloat(data, "recovery_frames")),
 				})
 			default:
 				log.Printf("Unknown component type: %s", comp.Type)
