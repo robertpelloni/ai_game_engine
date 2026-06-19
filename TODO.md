@@ -14,5 +14,5 @@
 - [x] Integrate Ebitengine for 2D visual output (v0.0.9)
 - [ ] Implement Godot GDExtension bridge for 3D scenarios
 - [x] Integrate actual asset generation API (v0.0.11)
-- [ ] Implement complex rule parsing (e.g., scripted behaviors)
+- [x] Implement complex rule parsing (v0.0.12)
 - [x] Implement multi-threaded system updates (v0.0.10)

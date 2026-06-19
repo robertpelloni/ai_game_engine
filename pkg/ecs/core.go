@@ -1,6 +1,9 @@
 package ecs
 
-import "sync"
+import (
+	"sync"
+	"github.com/robertpelloni/ai_game_engine/pkg/schema"
+)
 
 type Entity uint32
 
@@ -55,6 +58,8 @@ type CombatState struct {
 }
 
 type Registry struct {
+	CollisionCallback func(e1, e2 Entity, rules []schema.EventAction)
+
 	Mu     sync.RWMutex
 	nextID uint32
 

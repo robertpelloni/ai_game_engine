@@ -283,15 +283,19 @@ func (r *Registry) reflectVelocity(i, j int, axisX bool) {
 }
 
 func (r *Registry) handleCollision(e1, e2 Entity, rules []schema.EventAction) {
-	for _, rule := range rules {
-		if strings.Contains(rule.Trigger, "COLLIDES_WITH") {
-			fmt.Printf("Collision detected between %d and %d. Rule Trigger: %s, Action: %s\n", e1, e2, rule.Trigger, rule.Action)
-			if rule.Action == "Damage" {
-				r.ApplyDamage(e1, 10)
-				r.ApplyDamage(e2, 10)
-			} else if rule.Action == "Stop" {
-				if r.HasVelocity[e1] { r.Velocities[e1] = Velocity{0, 0} }
-				if r.HasVelocity[e2] { r.Velocities[e2] = Velocity{0, 0} }
+	if r.CollisionCallback != nil {
+		r.CollisionCallback(e1, e2, rules)
+	} else {
+		// Fallback
+		for _, rule := range rules {
+			if strings.Contains(rule.Trigger, "COLLIDES_WITH") {
+				if rule.Action == "Damage" {
+					r.ApplyDamage(e1, 10)
+					r.ApplyDamage(e2, 10)
+				} else if rule.Action == "Stop" {
+					if r.HasVelocity[e1] { r.Velocities[e1] = Velocity{0, 0} }
+					if r.HasVelocity[e2] { r.Velocities[e2] = Velocity{0, 0} }
+				}
 			}
 		}
 	}

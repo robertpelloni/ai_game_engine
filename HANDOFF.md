@@ -27,3 +27,9 @@ In this session, I implemented advanced collision features and physical constrai
 - Resolved critical data races by properly exposing and locking the ECS Registry's `sync.RWMutex` (`Mu`).
 - Implemented an asynchronous asset generation API mockup to translate text prompts from JSON schema into dynamic cached `ebiten.Image` sprites.
 - Successfully resolved merge conflicts and removed redundant submodule tracking for Go packages.
+
+
+## Session Findings (v0.0.12)
+- Implemented a complex string logic parser pseudo-AST allowing entities to run logic chains based entirely on strings loaded from JSON schema (e.g. `Health < 50 AND COLLIDES_WITH`).
+- Resolved cyclic dependency by exporting a `CollisionCallback` function interface onto the ECS Registry for the engine package to fulfill.
+- Integrated a live background asynchronous generation mock to stream texture data to Ebiten safely.

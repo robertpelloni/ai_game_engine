@@ -73,7 +73,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	fmt.Println("Starting AI Game Engine v0.0.11...")
+	fmt.Println("Starting AI Game Engine v0.0.12...")
 
 	// Initial mock schema
 	initialSchema := &schema.GameSchema{
@@ -107,11 +107,19 @@ func main() {
 		Rules: []schema.EventAction{
 			{Trigger: "COLLIDES_WITH", Action: "Damage"},
 			{Trigger: "COLLIDES_WITH", Action: "Stop"},
+			{Trigger: "Health < 50 AND COLLIDES_WITH", Action: "RunAway"},
 		},
 		StyleKeywords: []string{"Retro Raycaster", "Souls Combat"},
 	}
 
 	registry := ecs.NewRegistry()
+	registry.CollisionCallback = func(e1, e2 ecs.Entity, rules []schema.EventAction) {
+		for _, rule := range rules {
+			if engine.ParseRuleCondition(registry, e1, e2, rule.Trigger) {
+				engine.ExecuteRuleAction(registry, e1, e2, rule.Action)
+			}
+		}
+	}
 	engine.PatchRegistry(registry, initialSchema)
 
 	styleConfig := engine.GetStyleConfig(initialSchema.StyleKeywords)
@@ -140,7 +148,7 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("AI Game Engine 0.0.11")
+	ebiten.SetWindowTitle("AI Game Engine 0.0.12")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}

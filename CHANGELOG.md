@@ -1,4 +1,10 @@
 # CHANGELOG
+## [0.0.12] - 2024-06-02
+- Implemented complex rule parsing engine (`pkg/engine/rules.go`).
+- Added a basic pseudo-AST to evaluate entity conditionals defined entirely via string parameters in JSON schemas (e.g., `Health < 50 AND COLLIDES_WITH`).
+- Updated `UpdateCollision` systems to invoke a `CollisionCallback`, avoiding circular dependency while evaluating high-level rules dynamically.
+- Included robust testing suite for rule string evaluation.
+
 ## [0.0.11] - 2024-06-02
 - Implemented Asynchronous Asset Generation API mock (`pkg/assets`).
 - Updated `SpriteRenderer` component to include a `Prompt` string for generative assets.
