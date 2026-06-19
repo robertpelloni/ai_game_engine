@@ -1,4 +1,8 @@
 # CHANGELOG
+## [0.0.14] - 2024-06-02
+- Implemented Natural Language to JSON API mock (`pkg/engine/nlp_parser.go`).
+- Engine can now watch text files (`prompt.txt`) and dynamically hot-swap/regenerate running ECS entities using string heuristic commands (e.g., "generate a massive sci-fi dungeon").
+
 ## [0.0.13] - 2024-06-02
 - Implemented AI-driven procedural level generator `pkg/engine/level_generator.go`.
 - Added support for `LevelSeed`, `RoomCount`, and `Biome` configuration in `schema.go`.

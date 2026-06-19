@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"sync"
 
 	"github.com/robertpelloni/ai_game_engine/pkg/assets"
@@ -82,7 +84,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	fmt.Println("Starting AI Game Engine v0.0.13...")
+	fmt.Println("Starting AI Game Engine v0.0.14...")
 
 	// Initial mock schema
 	initialSchema := &schema.GameSchema{
@@ -145,6 +147,36 @@ func main() {
 	}
 	game.generatedLevels = engine.GenerateLevel(registry, &initialSchema.World)
 
+	// Watch prompt.txt for natural language instructions
+	promptFile := "prompt.txt"
+	os.WriteFile(promptFile, []byte("generate a huge fantasy dungeon"), 0644)
+	defer os.Remove(promptFile)
+
+	go func() {
+		lastMod := time.Time{}
+		for {
+			info, err := os.Stat(promptFile)
+			if err == nil && info.ModTime().After(lastMod) {
+				lastMod = info.ModTime()
+				bytes, err := os.ReadFile(promptFile)
+				if err == nil && len(bytes) > 0 {
+					newSchema, err := engine.ParseNaturalLanguageToSchema(string(bytes))
+					if err == nil && newSchema != nil {
+						// Lock and apply new map details
+						game.schemaMu.Lock()
+						game.schema.World.LevelSeed = newSchema.World.LevelSeed
+						game.schema.World.RoomCount = newSchema.World.RoomCount
+						game.schema.World.Biome = newSchema.World.Biome
+
+						game.generatedLevels = engine.GenerateLevel(registry, &game.schema.World)
+						game.schemaMu.Unlock()
+					}
+				}
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
 	// Create a dummy schema file for the watcher
 	schemaFile := "schema.json"
 	os.WriteFile(schemaFile, []byte(`{"style_keywords": ["Gritty Noir"]}`), 0644)
@@ -179,7 +211,7 @@ func main() {
 
 
 	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("AI Game Engine 0.0.13")
+	ebiten.SetWindowTitle("AI Game Engine 0.0.14")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}

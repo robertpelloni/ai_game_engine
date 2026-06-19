@@ -40,3 +40,8 @@ In this session, I implemented advanced collision features and physical constrai
 - Integrated JSON schema definitions for runtime `LevelSeed` and `RoomCount` generation logic.
 - Implemented real-time dynamic level generation via the hot-reloading file watcher, protected by standard Go Memory model conventions (`sync.RWMutex` guarding the active schema rules inside the main Ebiten loop).
 - Integrated level generator dynamically with the pre-existing asynchronous asset API mock by generating specific dynamic visual text prompts corresponding to loaded `Biome` values.
+
+
+## Session Findings (v0.0.14)
+- Implemented the ultimate goal of connecting raw natural language commands directly to the core runtime simulation via the mock NLP API.
+- Reconfigured `main.go` to listen dynamically to an external `prompt.txt` file and run live schema regeneration entirely off human language inputs, fulfilling the engine's primary generative design purpose.

@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"github.com/robertpelloni/ai_game_engine/pkg/assets"
+
 	"fmt"
 	"math/rand"
 
@@ -41,10 +43,12 @@ func GenerateLevel(reg *ecs.Registry, config *schema.WorldConfig) []ecs.Entity {
 		// Add a floor prop (no collider)
 		floor := reg.CreateEntity()
 		reg.AddPosition(floor, ecs.Position{X: cx, Y: cy})
+		spriteID := fmt.Sprintf("floor_%d", i)
 		reg.AddSprite(floor, ecs.SpriteRenderer{
-			SpriteID: fmt.Sprintf("floor_%d", i),
+			SpriteID: spriteID,
 			Prompt:   floorPrompt,
 		})
+		assets.GenerateAssetAsync(spriteID, floorPrompt, 32, 32)
 		generatedEntities = append(generatedEntities, floor)
 
 		// Surround with some random walls
@@ -55,10 +59,12 @@ func GenerateLevel(reg *ecs.Registry, config *schema.WorldConfig) []ecs.Entity {
 			wall := reg.CreateEntity()
 			reg.AddPosition(wall, ecs.Position{X: wx, Y: wy})
 			reg.AddCollider(wall, ecs.Collider{Width: 32, Height: 32, Static: true, Layer: 1, Mask: 1})
+			spriteID2 := fmt.Sprintf("wall_%d_%d", i, j)
 			reg.AddSprite(wall, ecs.SpriteRenderer{
-				SpriteID: fmt.Sprintf("wall_%d_%d", i, j),
+				SpriteID: spriteID2,
 				Prompt:   wallPrompt,
 			})
+			assets.GenerateAssetAsync(spriteID2, wallPrompt, 32, 32)
 			generatedEntities = append(generatedEntities, wall)
 		}
 	}
