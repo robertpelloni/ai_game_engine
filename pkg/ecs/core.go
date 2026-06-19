@@ -26,6 +26,7 @@ type Velocity struct {
 
 type SpriteRenderer struct {
 	SpriteID string
+	Prompt string
 }
 
 type Collider struct {

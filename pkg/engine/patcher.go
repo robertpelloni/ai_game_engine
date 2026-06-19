@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"github.com/robertpelloni/ai_game_engine/pkg/assets"
+
 	"github.com/robertpelloni/ai_game_engine/pkg/ecs"
 	"github.com/robertpelloni/ai_game_engine/pkg/schema"
 	"log"
@@ -63,9 +65,17 @@ func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
 					VY: getFloat(data, "vy"),
 				})
 			case "SpriteRenderer":
+				spriteID := getString(data, "sprite_id")
+				prompt := getString(data, "prompt")
+
 				registry.AddSprite(e, ecs.SpriteRenderer{
-					SpriteID: getString(data, "sprite_id"),
+					SpriteID: spriteID,
+					Prompt:   prompt,
 				})
+
+				if prompt != "" {
+					assets.GenerateAssetAsync(spriteID, prompt, 32, 32)
+				}
 			case "Collider":
 				registry.AddCollider(e, ecs.Collider{
 					Width:       getFloat(data, "width"),

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/robertpelloni/ai_game_engine/pkg/assets"
+
 	"fmt"
 	"image/color"
 	"log"
@@ -55,7 +57,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 
-		vector.DrawFilledRect(screen, float32(pos.X), float32(pos.Y), w, h, c, false)
+		img := assets.GetTexture(g.registry.Sprites[i].SpriteID)
+		if img != nil {
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(pos.X, pos.Y)
+			screen.DrawImage(img, op)
+		} else {
+			vector.DrawFilledRect(screen, float32(pos.X), float32(pos.Y), w, h, c, false)
+		}
 	}
 }
 
@@ -64,7 +73,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	fmt.Println("Starting AI Game Engine v0.0.10...")
+	fmt.Println("Starting AI Game Engine v0.0.11...")
 
 	// Initial mock schema
 	initialSchema := &schema.GameSchema{
@@ -131,7 +140,7 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("AI Game Engine 0.0.10")
+	ebiten.SetWindowTitle("AI Game Engine 0.0.11")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}

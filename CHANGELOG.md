@@ -1,4 +1,10 @@
 # CHANGELOG
+## [0.0.11] - 2024-06-02
+- Implemented Asynchronous Asset Generation API mock (`pkg/assets`).
+- Updated `SpriteRenderer` component to include a `Prompt` string for generative assets.
+- Connected JSON Patcher to trigger async generation for new prompt-based sprites.
+- Created thread-safe `TextureCache` for Ebitengine to dynamically fetch textures post-generation.
+
 ## [0.0.10] - 2024-06-02
 - Implemented multi-threaded system updates using goroutines and sync.WaitGroup.
 - Parallelized UpdatePhysics (excluding grid insert), UpdateCombat, and UpdateBehavior.

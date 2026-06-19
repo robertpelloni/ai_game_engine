@@ -13,6 +13,6 @@
 - [x] Implement Collision Filtering and Triggers (v0.0.8)
 - [x] Integrate Ebitengine for 2D visual output (v0.0.9)
 - [ ] Implement Godot GDExtension bridge for 3D scenarios
-- [ ] Integrate actual asset generation API
+- [x] Integrate actual asset generation API (v0.0.11)
 - [ ] Implement complex rule parsing (e.g., scripted behaviors)
 - [x] Implement multi-threaded system updates (v0.0.10)

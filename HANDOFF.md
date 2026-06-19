@@ -19,3 +19,11 @@ In this session, I implemented advanced collision features and physical constrai
 - **Per-Entity Friction**: Implement material-based friction in the collision resolution system.
 - **Layer Manager AI**: Train or prompt the AI to intelligently assign layers (e.g., Layer 1: Player, Layer 2: Enemy, Layer 3: Environment).
 - **Visualization**: Implement actual 2D rendering to visually debug these complex physics interactions.
+
+
+## Session Findings (v0.0.11)
+- Integrated Ebitengine for 2D visual output with headless test support via Xvfb.
+- Implemented robust multi-threading for ECS using Goroutines and sync.WaitGroup.
+- Resolved critical data races by properly exposing and locking the ECS Registry's `sync.RWMutex` (`Mu`).
+- Implemented an asynchronous asset generation API mockup to translate text prompts from JSON schema into dynamic cached `ebiten.Image` sprites.
+- Successfully resolved merge conflicts and removed redundant submodule tracking for Go packages.
