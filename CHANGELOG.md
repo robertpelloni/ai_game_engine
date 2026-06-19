@@ -1,4 +1,10 @@
 # CHANGELOG
+## [0.0.13] - 2024-06-02
+- Implemented AI-driven procedural level generator `pkg/engine/level_generator.go`.
+- Added support for `LevelSeed`, `RoomCount`, and `Biome` configuration in `schema.go`.
+- Wired generator to the hot-reload pipeline; the level map will now regenerate dynamically when JSON seed variables are modified.
+- Integrated generative asset streaming: room generation automatically tags sprites with text prompts based on Biome selection, calling the asynchronous API mock.
+
 ## [0.0.12] - 2024-06-02
 - Implemented complex rule parsing engine (`pkg/engine/rules.go`).
 - Added a basic pseudo-AST to evaluate entity conditionals defined entirely via string parameters in JSON schemas (e.g., `Health < 50 AND COLLIDES_WITH`).

@@ -33,3 +33,10 @@ In this session, I implemented advanced collision features and physical constrai
 - Implemented a complex string logic parser pseudo-AST allowing entities to run logic chains based entirely on strings loaded from JSON schema (e.g. `Health < 50 AND COLLIDES_WITH`).
 - Resolved cyclic dependency by exporting a `CollisionCallback` function interface onto the ECS Registry for the engine package to fulfill.
 - Integrated a live background asynchronous generation mock to stream texture data to Ebiten safely.
+
+
+## Session Findings (v0.0.13)
+- Engineered a generative AI procedural level creator module `pkg/engine/level_generator.go`.
+- Integrated JSON schema definitions for runtime `LevelSeed` and `RoomCount` generation logic.
+- Implemented real-time dynamic level generation via the hot-reloading file watcher, protected by standard Go Memory model conventions (`sync.RWMutex` guarding the active schema rules inside the main Ebiten loop).
+- Integrated level generator dynamically with the pre-existing asynchronous asset API mock by generating specific dynamic visual text prompts corresponding to loaded `Biome` values.

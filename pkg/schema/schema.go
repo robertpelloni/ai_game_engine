@@ -1,10 +1,13 @@
 package schema
 
 type WorldConfig struct {
-	GridSpacing float64 `json:"grid_spacing"`
+	GridSpacing float64   `json:"grid_spacing"`
 	Gravity     []float64 `json:"gravity"`
 	Viewport    []int     `json:"viewport"`
-	GlobalShader string    `json:"global_shader"`
+	GlobalShader string   `json:"global_shader"`
+	LevelSeed   int64     `json:"level_seed"`
+	RoomCount   int       `json:"room_count"`
+	Biome       string    `json:"biome"`
 }
 
 type ComponentData struct {

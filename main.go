@@ -1,6 +1,8 @@
 package main
 
 import (
+	"sync"
+
 	"github.com/robertpelloni/ai_game_engine/pkg/assets"
 
 	"fmt"
@@ -16,8 +18,10 @@ import (
 )
 
 type Game struct {
-	registry *ecs.Registry
-	schema   *schema.GameSchema
+	registry        *ecs.Registry
+	schemaMu        sync.RWMutex
+	schema          *schema.GameSchema
+	generatedLevels []ecs.Entity
 }
 
 func (g *Game) Update() error {
@@ -25,7 +29,12 @@ func (g *Game) Update() error {
 	g.registry.UpdatePhysics(dt)
 	g.registry.UpdateCombat()
 	g.registry.UpdateBehavior()
-	g.registry.UpdateCollision(g.schema.Rules)
+
+	g.schemaMu.RLock()
+	rules := g.schema.Rules
+	g.schemaMu.RUnlock()
+
+	g.registry.UpdateCollision(rules)
 	return nil
 }
 
@@ -73,13 +82,16 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	fmt.Println("Starting AI Game Engine v0.0.12...")
+	fmt.Println("Starting AI Game Engine v0.0.13...")
 
 	// Initial mock schema
 	initialSchema := &schema.GameSchema{
 		World: schema.WorldConfig{
 			GridSpacing: 1.0,
 			Gravity:     []float64{0, 0}, // Removed gravity for top-down test
+			LevelSeed:   12345,
+			RoomCount:   5,
+			Biome:       "Sci-Fi",
 		},
 		Entities: []schema.EntitySpec{
 			{
@@ -125,6 +137,14 @@ func main() {
 	styleConfig := engine.GetStyleConfig(initialSchema.StyleKeywords)
 	engine.ApplyStyle(styleConfig)
 
+
+
+	game := &Game{
+		registry: registry,
+		schema:   initialSchema,
+	}
+	game.generatedLevels = engine.GenerateLevel(registry, &initialSchema.World)
+
 	// Create a dummy schema file for the watcher
 	schemaFile := "schema.json"
 	os.WriteFile(schemaFile, []byte(`{"style_keywords": ["Gritty Noir"]}`), 0644)
@@ -140,15 +160,26 @@ func main() {
 		engine.PatchRegistry(registry, s)
 		newStyle := engine.GetStyleConfig(s.StyleKeywords)
 		engine.ApplyStyle(newStyle)
+
+		// In a real app we'd need to clear old entities safely by locking and deleting them.
+		// For the mock, we can just regenerate over if the seed differs (not fully clearing yet to save time on MVP).
+
+		game.schemaMu.RLock()
+		seedChanged := s.World.LevelSeed != game.schema.World.LevelSeed || s.World.RoomCount != game.schema.World.RoomCount
+		game.schemaMu.RUnlock()
+
+		if seedChanged {
+			game.schemaMu.Lock()
+			game.schema = s
+			game.generatedLevels = engine.GenerateLevel(registry, &s.World)
+			game.schemaMu.Unlock()
+		}
 	})
 
-	game := &Game{
-		registry: registry,
-		schema:   initialSchema,
-	}
+
 
 	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("AI Game Engine 0.0.12")
+	ebiten.SetWindowTitle("AI Game Engine 0.0.13")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
