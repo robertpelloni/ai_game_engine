@@ -1,13 +1,21 @@
 package assets
 
 import (
+	"bytes"
+	"context"
+	"encoding/base64"
+	"image"
 	"image/color"
+	_ "image/jpeg"
+	_ "image/png"
 	"log"
 	"math/rand"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/sashabaranov/go-openai"
 )
 
 type TextureCache struct {
@@ -28,7 +36,6 @@ func GetTexture(spriteID string) *ebiten.Image {
 }
 
 func GenerateAssetAsync(spriteID string, prompt string, width, height int) {
-	// If it already exists or is empty, skip
 	if prompt == "" {
 		return
 	}
@@ -48,13 +55,41 @@ func GenerateAssetAsync(spriteID string, prompt string, width, height int) {
 	go func() {
 		log.Printf("AssetManager: Starting generation for [%s] based on prompt: '%s'", spriteID, prompt)
 
-		// Simulate API Latency (e.g., Stable Diffusion/DALL-E)
-		time.Sleep(time.Duration(1000 + rand.Intn(2000)) * time.Millisecond)
+		apiKey := os.Getenv("OPENAI_API_KEY")
+		if apiKey != "" {
+			client := openai.NewClient(apiKey)
+			req := openai.ImageRequest{
+				Prompt:         prompt + ", pixel art style, top down 2d game asset, simple background",
+				Size:           openai.CreateImageSize256x256,
+				ResponseFormat: openai.CreateImageResponseFormatB64JSON,
+				N:              1,
+			}
 
-		// Create a mock image based on the prompt hash/length to give it a unique pseudo-random color
+			resp, err := client.CreateImage(context.Background(), req)
+			if err == nil && len(resp.Data) > 0 {
+				imgBytes, err := base64.StdEncoding.DecodeString(resp.Data[0].B64JSON)
+				if err == nil {
+					img, _, err := image.Decode(bytes.NewReader(imgBytes))
+					if err == nil {
+						ebitenImg := ebiten.NewImageFromImage(img)
+
+						Cache.mu.Lock()
+						Cache.textures[spriteID] = ebitenImg
+						delete(Cache.generating, spriteID)
+						Cache.mu.Unlock()
+						log.Printf("AssetManager: Completed API generation for [%s]", spriteID)
+						return
+					}
+				}
+			} else {
+				log.Printf("AssetManager: API Image Gen failed: %v, falling back to mock", err)
+			}
+		}
+
+		// Fallback to mock behavior
+		time.Sleep(time.Duration(1000 + rand.Intn(2000)) * time.Millisecond)
 		img := ebiten.NewImage(width, height)
 
-		// Basic hash of string for color
 		hash := 0
 		for _, c := range prompt {
 			hash += int(c)
@@ -71,6 +106,6 @@ func GenerateAssetAsync(spriteID string, prompt string, width, height int) {
 		delete(Cache.generating, spriteID)
 		Cache.mu.Unlock()
 
-		log.Printf("AssetManager: Completed generation for [%s]", spriteID)
+		log.Printf("AssetManager: Completed mock generation for [%s]", spriteID)
 	}()
 }

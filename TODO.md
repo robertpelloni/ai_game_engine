@@ -16,3 +16,5 @@
 - [x] Integrate actual asset generation API (v0.0.11)
 - [x] Implement complex rule parsing (v0.0.12)
 - [x] Implement multi-threaded system updates (v0.0.10)
+- [x] Integrate actual LLM API for NLP parsing (e.g. OpenAI GPT-4)
+- [x] Integrate actual Image Generation API for assets (e.g. OpenAI DALL-E)

@@ -1,4 +1,10 @@
 # CHANGELOG
+## [0.0.15] - 2024-06-03
+- Integrated actual OpenAI GPT-3.5 API for Natural Language Parsing (`pkg/engine/nlp_parser.go`).
+- Integrated actual OpenAI DALL-E API for async asset generation (`pkg/assets/generator.go`).
+- Maintained fallback mock logic to ensure stability when `OPENAI_API_KEY` is absent.
+
+
 ## [0.0.14] - 2024-06-02
 - Implemented Natural Language to JSON API mock (`pkg/engine/nlp_parser.go`).
 - Engine can now watch text files (`prompt.txt`) and dynamically hot-swap/regenerate running ECS entities using string heuristic commands (e.g., "generate a massive sci-fi dungeon").
