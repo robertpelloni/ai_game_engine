@@ -18,3 +18,7 @@
 - [x] Implement multi-threaded system updates (v0.0.10)
 - [x] Integrate actual LLM API for NLP parsing (e.g. OpenAI GPT-4)
 - [x] Integrate actual Image Generation API for assets (e.g. OpenAI DALL-E)
+- [x] Implement Phase 13: Advanced Rule Engine and Scripting
+  - [x] Add support for state mutation commands (e.g. SetFlag, IncrementHealth)
+  - [x] Add support for local entity variables/state storage
+  - [x] Expand pseudo-AST evaluator for nested conditions

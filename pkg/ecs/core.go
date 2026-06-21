@@ -58,6 +58,10 @@ type CombatState struct {
 }
 
 type Registry struct {
+
+	// Entity States
+	EntityStates []EntityState
+	HasState     []bool
 	CollisionCallback func(e1, e2 Entity, rules []schema.EventAction)
 
 	Mu     sync.RWMutex
@@ -106,6 +110,8 @@ func NewRegistry() *Registry {
 		HasAIBehavior: make([]bool, 0),
 		HasHealth:     make([]bool, 0),
 		HasCombatState: make([]bool, 0),
+		EntityStates:  make([]EntityState, 0),
+		HasState:      make([]bool, 0),
 		SpatialGrid:   NewGrid(100.0),
 		Damping:       1.0, // Default: no damping
 	}

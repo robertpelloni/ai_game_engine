@@ -1,4 +1,11 @@
 # CHANGELOG
+## [0.0.17] - 2024-06-03
+- Implemented Phase 13: Advanced Rule Engine and Scripting.
+- Added `EntityState` to ECS to store arbitrary flags and numbers dynamically via script.
+- Upgraded the pseudo-AST parser to handle nested AND conditions.
+- Added `SetFlag` and `Heal` script commands.
+
+
 ## [0.0.16] - 2024-06-03
 - Implemented Godot GDExtension bridge framework in `pkg/godot/bridge.go`.
 - Provides the thread-safe mock integration layer needed to sync the deterministic Go ECS state with 3D Godot nodes.
