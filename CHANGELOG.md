@@ -1,4 +1,9 @@
 # CHANGELOG
+## [0.0.16] - 2024-06-03
+- Implemented Godot GDExtension bridge framework in `pkg/godot/bridge.go`.
+- Provides the thread-safe mock integration layer needed to sync the deterministic Go ECS state with 3D Godot nodes.
+
+
 ## [0.0.15] - 2024-06-03
 - Integrated actual OpenAI GPT-3.5 API for Natural Language Parsing (`pkg/engine/nlp_parser.go`).
 - Integrated actual OpenAI DALL-E API for async asset generation (`pkg/assets/generator.go`).
