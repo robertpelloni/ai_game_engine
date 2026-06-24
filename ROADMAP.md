@@ -12,3 +12,4 @@
 - Phase 11: Advanced Physics: Filtering and Triggers (Complete)
 - Phase 12: Dynamic Asset Generation Integration
 - Phase 13: Advanced Rule Engine and Scripting
+- Phase 14: Godot GDExtension CGO Integration (C++ Bridge)

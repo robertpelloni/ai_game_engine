@@ -22,3 +22,6 @@
   - [x] Add support for state mutation commands (e.g. SetFlag, IncrementHealth)
   - [x] Add support for local entity variables/state storage
   - [x] Expand pseudo-AST evaluator for nested conditions
+- [x] Implement Phase 14: Godot GDExtension CGO Integration
+  - [x] Update `pkg/godot/bridge.go` to use `import "C"`
+  - [x] Define CGO stubs for memory synchronization

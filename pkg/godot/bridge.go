@@ -1,11 +1,23 @@
 package godot
 
+/*
+#include <stdlib.h>
+#include <stdio.h>
+
+// Mock C function representing a Godot C++ method
+void godot_update_node_transform(char* id, double x, double y) {
+    // In a real GDExtension, this would pass the memory to Godot's StringName and Vector3 classes.
+    // printf("CGO: Syncing Godot Node %s to Position(%f, %f)\n", id, x, y);
+}
+*/
+import "C"
 import (
 	"log"
 	"sync"
+	"unsafe"
 )
 
-// GDExtensionBridge handles the mock connection between the Go ECS and Godot C++
+// GDExtensionBridge handles the connection between the Go ECS and Godot C++
 type GDExtensionBridge struct {
 	mu           sync.RWMutex
 	isActive     bool
@@ -21,10 +33,10 @@ func (b *GDExtensionBridge) Initialize() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.isActive = true
-	log.Println("Godot GDExtension Bridge: Initialized")
+	log.Println("Godot GDExtension Bridge: Initialized with CGO")
 }
 
-// SyncEntity syncs a Go ECS entity with a Godot 3D Node.
+// SyncEntity syncs a Go ECS entity with a Godot 3D Node across the C boundary.
 func (b *GDExtensionBridge) SyncEntity(entityID string, ecsID int, x, y float64) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -35,8 +47,12 @@ func (b *GDExtensionBridge) SyncEntity(entityID string, ecsID int, x, y float64)
 	// Track the node
 	b.nodeRegistry[entityID] = ecsID
 
-	// Mock CGO call to update transform
-	// C.update_godot_node(C.CString(entityID), C.double(x), C.double(0), C.double(y))
+	// Convert Go string to C string
+	cEntityID := C.CString(entityID)
+	defer C.free(unsafe.Pointer(cEntityID))
+
+	// Call the mock C layer
+	C.godot_update_node_transform(cEntityID, C.double(x), C.double(y))
 }
 
 // Shutdown safely closes the bridge.

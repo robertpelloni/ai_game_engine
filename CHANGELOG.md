@@ -1,4 +1,25 @@
 # CHANGELOG
+## [0.1.0] - 2024-06-03
+- **MAJOR SYNC**: Merged Godot CGO Bridge stubs, Advanced Rule Engine AST features, and concurrent ECS system fixes back into the mainline architecture.
+- Project structure officially encompasses C++ bindings, OpenAI hooks, Ebitengine pipelines, and dynamic ECS memory.
+
+
+## [0.0.19] - 2024-06-03
+- **BUGFIX**: Resolved guaranteed collision deadlock in `pkg/ecs/systems.go`.
+- De-coupled the physics lock from the collision callback invocation loop, preventing recursive lock acquisitions when executing dynamic rules like `ApplyDamage` or `SetFlag`.
+
+
+## [0.0.19] - 2024-06-03
+- **BUGFIX**: Resolved guaranteed collision deadlock in `pkg/ecs/systems.go`.
+- De-coupled the physics lock from the collision callback invocation loop, preventing recursive lock acquisitions when executing dynamic rules like `ApplyDamage` or `SetFlag`.
+
+
+## [0.0.18] - 2024-06-03
+- Implemented Phase 14: Godot GDExtension CGO Integration.
+- Converted `pkg/godot/bridge.go` to use actual CGO bindings (`import "C"`).
+- Added C-level stubs to test memory pointer conversion (`C.CString`) and invocation across the FFI boundary without panicking the Go runtime.
+
+
 ## [0.0.17] - 2024-06-03
 - Implemented Phase 13: Advanced Rule Engine and Scripting.
 - Added `EntityState` to ECS to store arbitrary flags and numbers dynamically via script.

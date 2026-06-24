@@ -10,10 +10,7 @@ func TestParseRuleConditionAdvanced(t *testing.T) {
 	e1 := reg.CreateEntity()
 
 	reg.AddHealth(e1, ecs.Health{Current: 40, Max: 100})
-
-	state := ecs.NewEntityState()
-	state.Flags["IsPoisoned"] = true
-	reg.AddEntityState(e1, state)
+	reg.SetEntityFlag(e1, "IsPoisoned", true)
 
 	if !ParseRuleCondition(reg, e1, 0, "Health < 50 AND Flag IsPoisoned == true") {
 		t.Error("Expected condition to be true")
@@ -32,12 +29,13 @@ func TestExecuteRuleActionAdvanced(t *testing.T) {
 
 	ExecuteRuleAction(reg, e1, 0, "Heal 20; SetFlag IsBuffed true")
 
-	if reg.Healths[e1].Current != 70 {
-		t.Errorf("Expected health to be 70, got %f", reg.Healths[e1].Current)
+	h, _ := reg.GetHealth(e1)
+	if h.Current != 70 {
+		t.Errorf("Expected health to be 70, got %f", h.Current)
 	}
 
-	state := reg.GetEntityState(e1)
-	if state == nil || !state.Flags["IsBuffed"] {
+	val, exists := reg.GetEntityFlag(e1, "IsBuffed")
+	if !exists || !val {
 		t.Error("Expected IsBuffed flag to be true")
 	}
 }

@@ -8,7 +8,6 @@ import (
 
 // ParseRuleCondition evaluates a pseudo-AST string against two colliding entities
 func ParseRuleCondition(reg *ecs.Registry, e1, e2 ecs.Entity, condition string) bool {
-	// Nested conditions evaluation (very basic AND support)
 	if strings.Contains(condition, " AND ") {
 		parts := strings.Split(condition, " AND ")
 		for _, part := range parts {
@@ -18,7 +17,6 @@ func ParseRuleCondition(reg *ecs.Registry, e1, e2 ecs.Entity, condition string) 
 		}
 		return true
 	}
-
 	return evaluateSingleCondition(reg, e1, e2, condition)
 }
 
@@ -28,10 +26,9 @@ func evaluateSingleCondition(reg *ecs.Registry, e1, e2 ecs.Entity, condition str
 		if len(parts) >= 3 && parts[1] == "<" {
 			val, err := strconv.ParseFloat(parts[2], 64)
 			if err == nil {
-				if int(e1) < len(reg.HasHealth) && reg.HasHealth[e1] {
-					if reg.Healths[e1].Current >= val {
-						return false
-					}
+				h, exists := reg.GetHealth(e1)
+				if exists && h.Current >= val {
+					return false
 				}
 			}
 		}
@@ -41,15 +38,12 @@ func evaluateSingleCondition(reg *ecs.Registry, e1, e2 ecs.Entity, condition str
 	if strings.HasPrefix(condition, "Flag ") {
 		parts := strings.Split(condition, " ")
 		if len(parts) >= 4 && parts[2] == "==" {
-			flagName := parts[1] // e.g. Flag IsPoisoned == true
+			flagName := parts[1]
 			expected, err := strconv.ParseBool(parts[3])
 			if err == nil {
-				state := reg.GetEntityState(e1)
-				if state != nil {
-					val, exists := state.Flags[flagName]
-					if exists && val == expected {
-						return true
-					}
+				val, exists := reg.GetEntityFlag(e1, flagName)
+				if exists && val == expected {
+					return true
 				}
 			}
 		}
@@ -65,7 +59,6 @@ func evaluateSingleCondition(reg *ecs.Registry, e1, e2 ecs.Entity, condition str
 
 // ExecuteRuleAction executes an arbitrary action string on entities
 func ExecuteRuleAction(reg *ecs.Registry, e1, e2 ecs.Entity, action string) {
-	// Support multiple actions delimited by ';'
 	actions := strings.Split(action, ";")
 
 	for _, act := range actions {
@@ -76,16 +69,7 @@ func ExecuteRuleAction(reg *ecs.Registry, e1, e2 ecs.Entity, action string) {
 				flagName := parts[1]
 				val, err := strconv.ParseBool(parts[2])
 				if err == nil {
-					state := reg.GetEntityState(e1)
-					if state == nil {
-						newState := ecs.NewEntityState()
-						newState.Flags[flagName] = val
-						reg.AddEntityState(e1, newState)
-					} else {
-						reg.Mu.Lock()
-						state.Flags[flagName] = val
-						reg.Mu.Unlock()
-					}
+					reg.SetEntityFlag(e1, flagName, val)
 				}
 			}
 			continue
@@ -96,7 +80,7 @@ func ExecuteRuleAction(reg *ecs.Registry, e1, e2 ecs.Entity, action string) {
 			if len(parts) == 2 {
 				val, err := strconv.ParseFloat(parts[1], 64)
 				if err == nil {
-					reg.ApplyDamage(e1, -val) // Negative damage heals
+					reg.ApplyDamage(e1, -val)
 				}
 			}
 			continue
@@ -107,17 +91,10 @@ func ExecuteRuleAction(reg *ecs.Registry, e1, e2 ecs.Entity, action string) {
 			reg.ApplyDamage(e1, 10)
 			reg.ApplyDamage(e2, 10)
 		case "Stop":
-			if int(e1) < len(reg.HasVelocity) && reg.HasVelocity[e1] {
-				reg.Velocities[e1] = ecs.Velocity{0, 0}
-			}
-			if int(e2) < len(reg.HasVelocity) && reg.HasVelocity[e2] {
-				reg.Velocities[e2] = ecs.Velocity{0, 0}
-			}
+			reg.StopVelocity(e1)
+			reg.StopVelocity(e2)
 		case "RunAway":
-			if int(e1) < len(reg.HasVelocity) && reg.HasVelocity[e1] {
-				reg.Velocities[e1].VX = -reg.Velocities[e1].VX * 2
-				reg.Velocities[e1].VY = -reg.Velocities[e1].VY * 2
-			}
+			reg.ReverseVelocity(e1)
 		}
 	}
 }

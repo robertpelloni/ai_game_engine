@@ -162,9 +162,13 @@ func (r *Registry) UpdateCombat() {
 }
 
 func (r *Registry) UpdateCollision(rules []schema.EventAction) {
-	r.Mu.Lock()
-	defer r.Mu.Unlock()
+	// 1. Gather all collisions without firing callbacks
+	type collisionEvent struct {
+		e1, e2 Entity
+	}
+	var collisions []collisionEvent
 
+	r.Mu.Lock()
 	for i := 1; i < len(r.HasCollider); i++ {
 		if !r.HasCollider[i] || !r.HasPosition[i] {
 			continue
@@ -194,9 +198,15 @@ func (r *Registry) UpdateCollision(rules []schema.EventAction) {
 				if !c1.IsTrigger && !c2.IsTrigger {
 					r.resolveCollision(i, j)
 				}
-				r.handleCollision(Entity(i), Entity(j), rules)
+				collisions = append(collisions, collisionEvent{Entity(i), Entity(j)})
 			}
 		}
+	}
+	r.Mu.Unlock() // Unlock BEFORE firing callbacks
+
+	// 2. Process collisions
+	for _, c := range collisions {
+		r.handleCollision(c.e1, c.e2, rules)
 	}
 }
 
@@ -293,8 +303,10 @@ func (r *Registry) handleCollision(e1, e2 Entity, rules []schema.EventAction) {
 					r.ApplyDamage(e1, 10)
 					r.ApplyDamage(e2, 10)
 				} else if rule.Action == "Stop" {
+					r.Mu.Lock()
 					if r.HasVelocity[e1] { r.Velocities[e1] = Velocity{0, 0} }
 					if r.HasVelocity[e2] { r.Velocities[e2] = Velocity{0, 0} }
+					r.Mu.Unlock()
 				}
 			}
 		}
@@ -302,6 +314,8 @@ func (r *Registry) handleCollision(e1, e2 Entity, rules []schema.EventAction) {
 }
 
 func (r *Registry) ApplyDamage(e Entity, amount float64) {
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	if int(e) < len(r.HasHealth) && r.HasHealth[e] {
 		r.Healths[e].Current -= amount
 		fmt.Printf("Entity %d damaged. Health: %.2f/%.2f\n", e, r.Healths[e].Current, r.Healths[e].Max)
