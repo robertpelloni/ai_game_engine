@@ -1,4 +1,23 @@
 # CHANGELOG
+## [0.2.3] - 2024-06-03
+- **BUGFIX**: Fixed Style physics compounding bug. The `Damping` physics variable is now idempotently reset to 1.0 before being multiplied by the style modifiers, ensuring safe hot-reloading.
+- Cleaned up duplicate style application calls in `main.go` and `pkg/engine/patcher.go` to guarantee order-of-operations.
+
+
+## [0.2.2] - 2024-06-03
+- **BUGFIX**: Fixed several compilation errors in `main.go` caused by the recent intelligent merge that re-introduced unused imports and mismatched pointers to `schema.WorldConfig`.
+
+
+## [0.2.1] - 2024-06-03
+- **BUGFIX**: Fixed a build break in `main.go` caused by the recent ECS style trigger refactor (passed correct registry pointer to `ApplyStyle`).
+
+
+## [0.2.0] - 2024-06-03
+- Implemented Phase 3: Style-as-Technology Trigger Engine.
+- Styles defined in JSON (`style_keywords`) now dynamically mutate the global ECS simulation (e.g. 'Souls Combat' increases global gravity and damping).
+- Styles now dynamically inject suffix prompts into the asynchronous DALL-E asset pipeline to enforce art-direction uniformity (e.g. 'Cyberpunk' appends synthwave/neon tags to all room generation prompts).
+
+
 ## [0.1.0] - 2024-06-03
 - **MAJOR SYNC**: Merged Godot CGO Bridge stubs, Advanced Rule Engine AST features, and concurrent ECS system fixes back into the mainline architecture.
 - Project structure officially encompasses C++ bindings, OpenAI hooks, Ebitengine pipelines, and dynamic ECS memory.

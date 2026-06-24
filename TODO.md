@@ -2,7 +2,7 @@
 - [x] Define JSON schema
 - [x] Implement ECS core
 - [x] Implement basic systems
-- [x] Implement style triggers
+- [x] Implement style triggers (Phase 3)
 - [x] Implement hot-reloading
 - [x] Implement spatial partitioning (v0.0.3)
 - [x] Implement combat state machine (v0.0.3)

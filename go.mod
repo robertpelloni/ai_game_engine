@@ -3,6 +3,7 @@ module github.com/robertpelloni/ai_game_engine
 go 1.24.3
 
 require (
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/hajimehoshi/ebiten/v2 v2.9.9
 	github.com/sashabaranov/go-openai v1.41.2
 )

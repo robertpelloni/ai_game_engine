@@ -1,132 +1,125 @@
 package main
 
 import (
-	"time"
-
-	"sync"
-
-	"github.com/robertpelloni/ai_game_engine/pkg/assets"
-
-	"fmt"
-	"image/color"
 	"log"
 	"os"
+	"path/filepath"
+	"sync"
+	"time"
+	"image/color"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
 	"github.com/robertpelloni/ai_game_engine/pkg/ecs"
 	"github.com/robertpelloni/ai_game_engine/pkg/engine"
 	"github.com/robertpelloni/ai_game_engine/pkg/schema"
+	"github.com/robertpelloni/ai_game_engine/pkg/assets"
 )
 
 type Game struct {
-	registry        *ecs.Registry
-	schemaMu        sync.RWMutex
-	schema          *schema.GameSchema
-	generatedLevels []ecs.Entity
+	registry *ecs.Registry
+	schemaMu sync.RWMutex
+	schema   *schema.GameSchema
 }
 
 func (g *Game) Update() error {
-	dt := 1.0 / 60.0 // 60 TPS
-	g.registry.UpdatePhysics(dt)
+	// Rebuild ECS Registry dynamically if we parse natural language prompts
+	select {
+	case prompt := <-promptQueue:
+		g.regenerateFromPrompt(prompt)
+	default:
+	}
+
+	g.schemaMu.RLock()
+	defer g.schemaMu.RUnlock()
+
+	// Multi-threaded logic chunks
+	g.registry.UpdatePhysics(1.0 / 60.0)
 	g.registry.UpdateCombat()
 	g.registry.UpdateBehavior()
 
-	g.schemaMu.RLock()
-	rules := g.schema.Rules
-	g.schemaMu.RUnlock()
+	// Physics triggers rules
+	g.registry.UpdateCollision(g.schema.Rules)
 
-	g.registry.UpdateCollision(rules)
 	return nil
 }
 
+func (g *Game) regenerateFromPrompt(prompt string) {
+	log.Printf("Executing NLP schema regeneration: %s", prompt)
+	s, err := engine.ParseNaturalLanguageToSchema(prompt)
+	if err != nil {
+		log.Printf("NLP failed: %v", err)
+		return
+	}
+
+	g.schemaMu.Lock()
+	defer g.schemaMu.Unlock()
+	g.schema = s
+
+	// Reset standard registry
+	g.registry = ecs.NewRegistry()
+
+	// Rehydrate with base entities, then procedural generation, then styling overrides
+	engine.PatchRegistry(g.registry, g.schema)
+	engine.GenerateLevel(g.registry, &g.schema.World)
+}
+
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{0, 0, 0, 255})
+	g.schemaMu.RLock()
+	defer g.schemaMu.RUnlock()
 
 	g.registry.Mu.RLock()
 	defer g.registry.Mu.RUnlock()
 
-	// Very basic rendering loop over entities that have both a Position and Collider/Sprite
-	for i := 1; i < len(g.registry.HasPosition); i++ {
-		if !g.registry.HasPosition[i] {
-			continue
-		}
+	screen.Fill(color.RGBA{20, 20, 30, 255})
 
-		pos := g.registry.Positions[i]
+	for i := 1; i < len(g.registry.HasSprite); i++ {
+		if g.registry.HasSprite[i] && g.registry.HasPosition[i] {
+			p := g.registry.Positions[i]
+			sprite := g.registry.Sprites[i]
 
-		var w, h float32 = 10, 10
-		if i < len(g.registry.HasCollider) && g.registry.HasCollider[i] {
-			w = float32(g.registry.Colliders[i].Width)
-			h = float32(g.registry.Colliders[i].Height)
-		}
+			img := assets.GetTexture(sprite.SpriteID)
 
-		c := color.RGBA{255, 255, 255, 255}
-		if i < len(g.registry.HasHealth) && g.registry.HasHealth[i] {
-			// Change color if damaged
-			if g.registry.Healths[i].Current < g.registry.Healths[i].Max {
-				c = color.RGBA{255, 0, 0, 255}
+			if img != nil {
+				op := &ebiten.DrawImageOptions{}
+				op.GeoM.Translate(p.X, p.Y)
+				screen.DrawImage(img, op)
+			} else {
+				// Fallback rectangle if loading
+				c := g.registry.Colliders[i]
+				w, h := 32.0, 32.0
+				if g.registry.HasCollider[i] {
+					w, h = c.Width, c.Height
+				}
+				ebitenutil.DrawRect(screen, p.X, p.Y, w, h, color.RGBA{255, 0, 0, 255})
 			}
-		}
-
-		img := assets.GetTexture(g.registry.Sprites[i].SpriteID)
-		if img != nil {
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(pos.X, pos.Y)
-			screen.DrawImage(img, op)
-		} else {
-			vector.DrawFilledRect(screen, float32(pos.X), float32(pos.Y), w, h, c, false)
 		}
 	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 640, 480
+	return 800, 600
 }
 
-func main() {
-	fmt.Println("Starting AI Game Engine v0.0.14...")
+var promptQueue = make(chan string, 5)
 
-	// Initial mock schema
-	initialSchema := &schema.GameSchema{
-		World: schema.WorldConfig{
-			GridSpacing: 1.0,
-			Gravity:     []float64{0, 0}, // Removed gravity for top-down test
-			LevelSeed:   12345,
-			RoomCount:   5,
-			Biome:       "Sci-Fi",
-		},
-		Entities: []schema.EntitySpec{
-			{
-				ID: 1,
-				Components: []schema.ComponentData{
-					{Type: "Position", Data: map[string]interface{}{"x": 300.0, "y": 200.0}},
-					{Type: "Velocity", Data: map[string]interface{}{"vx": 50.0, "vy": 20.0}},
-					{Type: "SpriteRenderer", Data: map[string]interface{}{"sprite_id": "player"}},
-					{Type: "Collider", Data: map[string]interface{}{"width": 20.0, "height": 20.0}},
-					{Type: "Health", Data: map[string]interface{}{"current": 100.0, "max": 100.0}},
-					{Type: "CombatState", Data: map[string]interface{}{
-						"state": "Startup", "frames_left": 2.0, "startup_frames": 2.0, "active_frames": 3.0, "recovery_frames": 2.0,
-					}},
-				},
-			},
-			{
-				ID: 2,
-				Components: []schema.ComponentData{
-					{Type: "Position", Data: map[string]interface{}{"x": 400.0, "y": 250.0}},
-					{Type: "Collider", Data: map[string]interface{}{"width": 30.0, "height": 30.0, "static": true}},
-					{Type: "Health", Data: map[string]interface{}{"current": 50.0, "max": 50.0}},
-				},
-			},
-		},
-		Rules: []schema.EventAction{
-			{Trigger: "COLLIDES_WITH", Action: "Damage"},
-			{Trigger: "COLLIDES_WITH", Action: "Stop"},
-			{Trigger: "Health < 50 AND COLLIDES_WITH", Action: "RunAway"},
-		},
-		StyleKeywords: []string{"Retro Raycaster", "Souls Combat"},
+func main() {
+	schemaPath := filepath.Join(".", "pkg", "schema", "schema.json")
+	bytes, err := os.ReadFile(schemaPath)
+	if err != nil {
+		log.Fatalf("Failed to read schema file: %v", err)
+	}
+
+	initialSchema, err := schema.ParseSchemaBytes(bytes)
+	if err != nil {
+		log.Fatalf("Failed to parse schema JSON: %v", err)
 	}
 
 	registry := ecs.NewRegistry()
+
+	// Bind the Collision Callback interface
 	registry.CollisionCallback = func(e1, e2 ecs.Entity, rules []schema.EventAction) {
 		for _, rule := range rules {
 			if engine.ParseRuleCondition(registry, e1, e2, rule.Trigger) {
@@ -136,85 +129,126 @@ func main() {
 	}
 	engine.PatchRegistry(registry, initialSchema)
 
-	styleConfig := engine.GetStyleConfig(initialSchema.StyleKeywords)
-	engine.ApplyStyle(styleConfig)
-
-
-
 	game := &Game{
 		registry: registry,
 		schema:   initialSchema,
 	}
-	game.generatedLevels = engine.GenerateLevel(registry, &initialSchema.World)
 
-	// Watch prompt.txt for natural language instructions
-	promptFile := "prompt.txt"
-	os.WriteFile(promptFile, []byte("generate a huge fantasy dungeon"), 0644)
-	defer os.Remove(promptFile)
+	go watchSchemaFile(schemaPath, game)
+	go watchPromptFile("prompt.txt")
 
-	go func() {
-		lastMod := time.Time{}
-		for {
-			info, err := os.Stat(promptFile)
-			if err == nil && info.ModTime().After(lastMod) {
-				lastMod = info.ModTime()
-				bytes, err := os.ReadFile(promptFile)
-				if err == nil && len(bytes) > 0 {
-					newSchema, err := engine.ParseNaturalLanguageToSchema(string(bytes))
-					if err == nil && newSchema != nil {
-						// Lock and apply new map details
-						game.schemaMu.Lock()
-						game.schema.World.LevelSeed = newSchema.World.LevelSeed
-						game.schema.World.RoomCount = newSchema.World.RoomCount
-						game.schema.World.Biome = newSchema.World.Biome
+	ebiten.SetWindowSize(800, 600)
+	ebiten.SetWindowTitle("Jules AI Generative Engine")
 
-						game.generatedLevels = engine.GenerateLevel(registry, &game.schema.World)
-						game.schemaMu.Unlock()
-					}
-				}
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	// Create a dummy schema file for the watcher
-	schemaFile := "schema.json"
-	os.WriteFile(schemaFile, []byte(`{"style_keywords": ["Gritty Noir"]}`), 0644)
-	defer os.Remove(schemaFile)
-
-	// Run hot-reload watcher in background
-	go engine.WatchSchema(schemaFile, func(data []byte) {
-		s, err := schema.ParseSchemaBytes(data)
-		if err != nil {
-			log.Printf("Failed to parse reloaded schema: %v", err)
-			return
-		}
-		engine.PatchRegistry(registry, s)
-		newStyle := engine.GetStyleConfig(s.StyleKeywords)
-		engine.ApplyStyle(newStyle)
-
-		// In a real app we'd need to clear old entities safely by locking and deleting them.
-		// For the mock, we can just regenerate over if the seed differs (not fully clearing yet to save time on MVP).
-
-		game.schemaMu.RLock()
-		seedChanged := s.World.LevelSeed != game.schema.World.LevelSeed || s.World.RoomCount != game.schema.World.RoomCount
-		game.schemaMu.RUnlock()
-
-		if seedChanged {
-			game.schemaMu.Lock()
-			game.schema = s
-			game.generatedLevels = engine.GenerateLevel(registry, &s.World)
-			game.schemaMu.Unlock()
-		}
-	})
-
-
-
-	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("AI Game Engine 0.0.14")
+	log.Println("Starting game loop...")
 	if err := ebiten.RunGame(game); err != nil {
-		log.Fatal(err)
+		log.Fatalf("Game execution failed: %v", err)
+	}
+}
+
+func watchSchemaFile(path string, game *Game) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatalf("Failed to create file watcher: %v", err)
+	}
+	defer watcher.Close()
+
+	if err := watcher.Add(path); err != nil {
+		log.Fatalf("Failed to add file to watcher: %v", err)
 	}
 
-	fmt.Println("\nEngine shut down.")
+	var timer *time.Timer
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if event.Op&fsnotify.Write == fsnotify.Write {
+				if timer != nil {
+					timer.Stop()
+				}
+				timer = time.AfterFunc(100*time.Millisecond, func() {
+					reloadSchema(path, game)
+				})
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Printf("Watcher error: %v", err)
+		}
+	}
+}
+
+func reloadSchema(path string, game *Game) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		log.Printf("Failed to read reloaded schema: %v", err)
+		return
+	}
+
+	s, err := schema.ParseSchemaBytes(bytes)
+	if err != nil {
+		log.Printf("Failed to parse reloaded schema: %v", err)
+		return
+	}
+
+	// Lock the global game state to safely update the schema
+	game.schemaMu.Lock()
+	defer game.schemaMu.Unlock()
+	game.schema = s
+
+	// Safely patch the running registry with the new components
+	engine.PatchRegistry(game.registry, s)
+
+	log.Println("Schema successfully hot-reloaded and registry patched!")
+}
+
+func watchPromptFile(path string) {
+	// Create an empty prompt.txt file if it doesn't exist
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		os.WriteFile(path, []byte(""), 0644)
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatalf("Failed to create file watcher: %v", err)
+	}
+	defer watcher.Close()
+
+	if err := watcher.Add(path); err != nil {
+		log.Fatalf("Failed to add file to watcher: %v", err)
+	}
+
+	var timer *time.Timer
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if event.Op&fsnotify.Write == fsnotify.Write {
+				if timer != nil {
+					timer.Stop()
+				}
+				timer = time.AfterFunc(500*time.Millisecond, func() {
+					bytes, err := os.ReadFile(path)
+					if err == nil && len(bytes) > 0 {
+						prompt := string(bytes)
+						promptQueue <- prompt
+						// clear it out
+						os.WriteFile(path, []byte(""), 0644)
+					}
+				})
+			}
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Printf("Prompt Watcher error: %v", err)
+		}
+	}
 }

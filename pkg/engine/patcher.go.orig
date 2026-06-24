@@ -36,7 +36,7 @@ func getUint32(data map[string]interface{}, key string) uint32 {
 }
 
 func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
-	styleConfig := GetStyleConfig(s.StyleKeywords)
+	// Apply Style Triggers First
 
 	// Sync World Physics
 	if len(s.World.Gravity) >= 2 {
@@ -112,5 +112,6 @@ func PatchRegistry(registry *ecs.Registry, s *schema.GameSchema) {
 	}
 
 	// Apply Style Triggers AFTER base schema properties have been hydrated
+	styleConfig = GetStyleConfig(s.StyleKeywords)
 	ApplyStyle(registry, styleConfig)
 }
