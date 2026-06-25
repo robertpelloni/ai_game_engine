@@ -1,4 +1,9 @@
 # CHANGELOG
+## [0.3.0] - 2024-06-03
+- **EXECUTIVE SYNC**: Completed dual-direction merge, bringing all feature branches (Phase 13, Godot Bridge, Submodule fixes) into `main`.
+- Incremented version heavily to reflect structural consolidation.
+
+
 ## [0.2.3] - 2024-06-03
 - **BUGFIX**: Fixed Style physics compounding bug. The `Damping` physics variable is now idempotently reset to 1.0 before being multiplied by the style modifiers, ensuring safe hot-reloading.
 - Cleaned up duplicate style application calls in `main.go` and `pkg/engine/patcher.go` to guarantee order-of-operations.
