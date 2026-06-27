@@ -30,11 +30,11 @@ func TestCollisionAndDamage(t *testing.T) {
 	e2 := reg.CreateEntity()
 
 	reg.AddPosition(e1, Position{X: 0, Y: 0})
-	reg.AddCollider(e1, Collider{Width: 10, Height: 10})
+	reg.AddCollider(e1, Collider{Width: 10, Height: 10, Layer: 1, Mask: 1})
 	reg.AddHealth(e1, Health{Current: 100, Max: 100})
 
 	reg.AddPosition(e2, Position{X: 5, Y: 5})
-	reg.AddCollider(e2, Collider{Width: 10, Height: 10})
+	reg.AddCollider(e2, Collider{Width: 10, Height: 10, Layer: 1, Mask: 1})
 	reg.AddHealth(e2, Health{Current: 100, Max: 100})
 
 	// Spatial grid needs to be populated

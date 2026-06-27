@@ -1,6 +1,9 @@
 package ecs
 
-import "sync"
+import (
+	"sync"
+	"github.com/robertpelloni/ai_game_engine/pkg/schema"
+)
 
 type Entity uint32
 
@@ -26,10 +29,16 @@ type Velocity struct {
 
 type SpriteRenderer struct {
 	SpriteID string
+	Prompt string
 }
 
 type Collider struct {
 	Width, Height float64
+	Restitution   float64 // 0 for no bounce, 1 for perfect bounce
+	Static        bool    // If true, the object doesn't move on collision
+	Layer         uint32  // Collision layer bitmask
+	Mask          uint32  // Collision mask bitmask
+	IsTrigger     bool    // If true, collision resolution is skipped
 }
 
 type AIBehavior struct {
@@ -49,8 +58,20 @@ type CombatState struct {
 }
 
 type Registry struct {
-	mu     sync.RWMutex
+
+	// Entity States
+	EntityStates []EntityState
+	HasState     []bool
+	CollisionCallback func(e1, e2 Entity, rules []schema.EventAction)
+
+	Mu     sync.RWMutex
 	nextID uint32
+
+	// Global Physics Properties
+	GravityX float64
+	GravityY float64
+	Damping  float64 // Global velocity damping (0 to 1)
+	Friction float64 // Surface friction (not yet fully implemented in resolution)
 
 	// Contiguous memory for components
 	Positions    []Position
@@ -89,7 +110,10 @@ func NewRegistry() *Registry {
 		HasAIBehavior: make([]bool, 0),
 		HasHealth:     make([]bool, 0),
 		HasCombatState: make([]bool, 0),
+		EntityStates:  make([]EntityState, 0),
+		HasState:      make([]bool, 0),
 		SpatialGrid:   NewGrid(100.0),
+		Damping:       1.0, // Default: no damping
 	}
 }
 
@@ -115,8 +139,8 @@ func (r *Registry) ensureCapacity(id uint32) {
 }
 
 func (r *Registry) CreateEntity() Entity {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.nextID++
 	id := r.nextID
 	r.ensureCapacity(id)
@@ -124,56 +148,56 @@ func (r *Registry) CreateEntity() Entity {
 }
 
 func (r *Registry) AddPosition(e Entity, p Position) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.ensureCapacity(uint32(e))
 	r.Positions[e] = p
 	r.HasPosition[e] = true
 }
 
 func (r *Registry) AddVelocity(e Entity, v Velocity) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.ensureCapacity(uint32(e))
 	r.Velocities[e] = v
 	r.HasVelocity[e] = true
 }
 
 func (r *Registry) AddSprite(e Entity, s SpriteRenderer) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.ensureCapacity(uint32(e))
 	r.Sprites[e] = s
 	r.HasSprite[e] = true
 }
 
 func (r *Registry) AddCollider(e Entity, c Collider) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.ensureCapacity(uint32(e))
 	r.Colliders[e] = c
 	r.HasCollider[e] = true
 }
 
 func (r *Registry) AddAIBehavior(e Entity, b AIBehavior) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.ensureCapacity(uint32(e))
 	r.AIBehaviors[e] = b
 	r.HasAIBehavior[e] = true
 }
 
 func (r *Registry) AddHealth(e Entity, h Health) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.ensureCapacity(uint32(e))
 	r.Healths[e] = h
 	r.HasHealth[e] = true
 }
 
 func (r *Registry) AddCombatState(e Entity, s CombatState) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
 	r.ensureCapacity(uint32(e))
 	r.CombatStates[e] = s
 	r.HasCombatState[e] = true

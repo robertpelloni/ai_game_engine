@@ -2,11 +2,26 @@
 - [x] Define JSON schema
 - [x] Implement ECS core
 - [x] Implement basic systems
-- [x] Implement style triggers
+- [x] Implement style triggers (Phase 3)
 - [x] Implement hot-reloading
 - [x] Implement spatial partitioning (v0.0.3)
 - [x] Implement combat state machine (v0.0.3)
-- [ ] Integrate actual asset generation API
-- [ ] Implement complex rule parsing (e.g., scripted behaviors)
-- [ ] Implement multi-threaded system updates
-- [ ] Add 2D Rendering library (e.g., Ebitengine)
+- [x] Add engine submodules (Godot, Ebitengine) (v0.0.4)
+- [x] Implement Scene Management (v0.0.5)
+- [x] Implement Collision Resolution and Raycasting (v0.0.6)
+- [x] Implement Integration Test Suite (v0.0.7)
+- [x] Implement Collision Filtering and Triggers (v0.0.8)
+- [x] Integrate Ebitengine for 2D visual output (v0.0.9)
+- [x] Implement Godot GDExtension bridge for 3D scenarios
+- [x] Integrate actual asset generation API (v0.0.11)
+- [x] Implement complex rule parsing (v0.0.12)
+- [x] Implement multi-threaded system updates (v0.0.10)
+- [x] Integrate actual LLM API for NLP parsing (e.g. OpenAI GPT-4)
+- [x] Integrate actual Image Generation API for assets (e.g. OpenAI DALL-E)
+- [x] Implement Phase 13: Advanced Rule Engine and Scripting
+  - [x] Add support for state mutation commands (e.g. SetFlag, IncrementHealth)
+  - [x] Add support for local entity variables/state storage
+  - [x] Expand pseudo-AST evaluator for nested conditions
+- [x] Implement Phase 14: Godot GDExtension CGO Integration
+  - [x] Update `pkg/godot/bridge.go` to use `import "C"`
+  - [x] Define CGO stubs for memory synchronization
