@@ -61,6 +61,15 @@ func (g *Game) regenerateFromPrompt(prompt string) {
 	// Reset standard registry
 	g.registry = ecs.NewRegistry()
 
+	// Rebind the Collision Callback interface
+	g.registry.CollisionCallback = func(e1, e2 ecs.Entity, rules []schema.EventAction) {
+		for _, rule := range rules {
+			if engine.ParseRuleCondition(g.registry, e1, e2, rule.Trigger) {
+				engine.ExecuteRuleAction(g.registry, e1, e2, rule.Action)
+			}
+		}
+	}
+
 	// Rehydrate with base entities, then procedural generation, then styling overrides
 	engine.PatchRegistry(g.registry, g.schema)
 	engine.GenerateLevel(g.registry, &g.schema.World)
@@ -238,9 +247,13 @@ func watchPromptFile(path string) {
 					bytes, err := os.ReadFile(path)
 					if err == nil && len(bytes) > 0 {
 						prompt := string(bytes)
-						promptQueue <- prompt
-						// clear it out
-						os.WriteFile(path, []byte(""), 0644)
+						select {
+						case promptQueue <- prompt:
+							// clear it out
+							os.WriteFile(path, []byte(""), 0644)
+						default:
+							log.Println("Prompt queue is full, dropping prompt")
+						}
 					}
 				})
 			}

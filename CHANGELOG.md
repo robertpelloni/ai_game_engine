@@ -137,3 +137,7 @@
 ## [0.0.1] - 2024-06-02
 - Initial project structure.
 - Basic ECS and JSON schema definition.
+
+## [0.4.0] - $(date +%Y-%m-%d)
+### Added
+- Created `pkg/net` package containing base `Server` and `Client` structs for UDP networking synchronization (Phase 15).
