@@ -145,3 +145,6 @@
 ### Fixed
 - Completed Phase 12 Asset Generation integration with `pkg/engine/assets/generator.go`.
 - Completed Phase 14 Godot GDExtension integration with `pkg/godot/gdextension.go`.
+
+### Fixed
+- Completed Phase 14 Godot GDExtension CGO Integration in v0.3.1.
