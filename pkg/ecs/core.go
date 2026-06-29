@@ -147,6 +147,24 @@ func (r *Registry) CreateEntity() Entity {
 	return Entity(id)
 }
 
+func (r *Registry) DestroyEntity(e Entity) {
+	r.Mu.Lock()
+	defer r.Mu.Unlock()
+
+	if int(e) < len(r.HasPosition) {
+		r.HasPosition[e] = false
+		r.HasVelocity[e] = false
+		r.HasSprite[e] = false
+		r.HasCollider[e] = false
+		r.HasAIBehavior[e] = false
+		r.HasHealth[e] = false
+		r.HasCombatState[e] = false
+		if int(e) < len(r.HasState) {
+			r.HasState[e] = false
+		}
+	}
+}
+
 func (r *Registry) AddPosition(e Entity, p Position) {
 	r.Mu.Lock()
 	defer r.Mu.Unlock()

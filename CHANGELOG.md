@@ -138,6 +138,8 @@
 - Initial project structure.
 - Basic ECS and JSON schema definition.
 
-## [0.4.0] - $(date +%Y-%m-%d)
+## [0.4.0] - 2026-06-29
 ### Added
 - Created `pkg/net` package containing base `Server` and `Client` structs for UDP networking synchronization (Phase 15).
+### Changed
+- Added Godot CGO bridge entity spawn/despawn hooks and updated `Registry.DestroyEntity` behavior to facilitate better integration between the Go ECS and Godot C++ nodes.
