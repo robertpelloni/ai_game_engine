@@ -9,14 +9,6 @@ void godot_update_node_transform(char* id, double x, double y) {
     // In a real GDExtension, this would pass the memory to Godot's StringName and Vector3 classes.
     // printf("CGO: Syncing Godot Node %s to Position(%f, %f)\n", id, x, y);
 }
-
-// Mock C function for spawning nodes
-void godot_spawn_node(char* id) {
-}
-
-// Mock C function for despawning nodes
-void godot_despawn_node(char* id) {
-}
 */
 import "C"
 import (
@@ -61,30 +53,6 @@ func (b *GDExtensionBridge) SyncEntity(entityID string, ecsID int, x, y float64)
 
 	// Call the mock C layer
 	C.godot_update_node_transform(cEntityID, C.double(x), C.double(y))
-}
-
-func (b *GDExtensionBridge) SpawnNode(entityID string, ecsID int) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if !b.isActive {
-		return
-	}
-	b.nodeRegistry[entityID] = ecsID
-	cEntityID := C.CString(entityID)
-	defer C.free(unsafe.Pointer(cEntityID))
-	C.godot_spawn_node(cEntityID)
-}
-
-func (b *GDExtensionBridge) DespawnNode(entityID string) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if !b.isActive {
-		return
-	}
-	delete(b.nodeRegistry, entityID)
-	cEntityID := C.CString(entityID)
-	defer C.free(unsafe.Pointer(cEntityID))
-	C.godot_despawn_node(cEntityID)
 }
 
 // Shutdown safely closes the bridge.

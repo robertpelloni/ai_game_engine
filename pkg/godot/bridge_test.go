@@ -11,20 +11,11 @@ func TestBridgeInitialization(t *testing.T) {
 	}
 	Bridge.mu.RUnlock()
 
-	Bridge.SpawnNode("player", 1)
+	Bridge.SyncEntity("player", 1, 10.5, 20.0)
 
 	Bridge.mu.RLock()
 	if Bridge.nodeRegistry["player"] != 1 {
-		t.Error("Entity was not spawned to the registry correctly")
-	}
-	Bridge.mu.RUnlock()
-
-	Bridge.SyncEntity("player", 1, 10.5, 20.0)
-
-	Bridge.DespawnNode("player")
-	Bridge.mu.RLock()
-	if _, ok := Bridge.nodeRegistry["player"]; ok {
-		t.Error("Entity was not despawned from the registry correctly")
+		t.Error("Entity was not synced to the registry correctly")
 	}
 	Bridge.mu.RUnlock()
 

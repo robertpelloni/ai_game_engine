@@ -28,6 +28,3 @@
 - [x] Implement Phase 15: Networking and Multiplayer Synchronization
   - [x] Implement basic UDP Server
   - [x] Implement basic UDP Client
-  - [x] Integrate Godot Node spawning/despawning in CGO Bridge
-- [ ] Implement Phase 16: Audio Engine Integration
-  - [x] Create audio manager stub

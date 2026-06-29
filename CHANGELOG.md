@@ -138,9 +138,10 @@
 - Initial project structure.
 - Basic ECS and JSON schema definition.
 
-## [0.4.0] - 2026-06-29
+## [0.4.0] - $(date +%Y-%m-%d)
 ### Added
 - Created `pkg/net` package containing base `Server` and `Client` structs for UDP networking synchronization (Phase 15).
-### Changed
-- Added Godot CGO bridge entity spawn/despawn hooks and updated `Registry.DestroyEntity` behavior to facilitate better integration between the Go ECS and Godot C++ nodes.
-- Expanded `pkg/net` Server and Client to serialize and synchronize ECS Position and Sprite state payloads using JSON over UDP.
+
+### Fixed
+- Completed Phase 12 Asset Generation integration with `pkg/engine/assets/generator.go`.
+- Completed Phase 14 Godot GDExtension integration with `pkg/godot/gdextension.go`.

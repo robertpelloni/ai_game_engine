@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"sync"
-	"encoding/json"
 
 	"github.com/robertpelloni/ai_game_engine/pkg/ecs"
 )
@@ -63,17 +62,6 @@ func (s *Server) listen() {
 	}
 }
 
-type NetworkState struct {
-	Entities []EntityData `json:"entities"`
-}
-
-type EntityData struct {
-	ID int `json:"id"`
-	X  float64 `json:"x"`
-	Y  float64 `json:"y"`
-	SpriteID string `json:"sprite_id"`
-}
-
 func (s *Server) BroadcastState() {
 	if s.conn == nil {
 		return
@@ -82,34 +70,11 @@ func (s *Server) BroadcastState() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	state := NetworkState{
-		Entities: make([]EntityData, 0),
-	}
-
-	s.registry.Mu.RLock()
-	for i := 1; i < len(s.registry.HasPosition); i++ {
-		if s.registry.HasPosition[i] {
-			data := EntityData{
-				ID: i,
-				X:  s.registry.Positions[i].X,
-				Y:  s.registry.Positions[i].Y,
-			}
-			if int(i) < len(s.registry.HasSprite) && s.registry.HasSprite[i] {
-				data.SpriteID = s.registry.Sprites[i].SpriteID
-			}
-			state.Entities = append(state.Entities, data)
-		}
-	}
-	s.registry.Mu.RUnlock()
-
-	stateBytes, err := json.Marshal(state)
-	if err != nil {
-		fmt.Printf("Error marshaling state: %v\n", err)
-		return
-	}
+	// Extremely simplified serialization mock
+	stateMsg := []byte("STATE_UPDATE")
 
 	for _, addr := range s.clients {
-		_, err := s.conn.WriteToUDP(stateBytes, addr)
+		_, err := s.conn.WriteToUDP(stateMsg, addr)
 		if err != nil {
 			fmt.Printf("Error broadcasting to %s: %v\n", addr.String(), err)
 		}

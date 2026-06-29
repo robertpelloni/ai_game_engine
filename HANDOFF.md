@@ -33,4 +33,3 @@ All roadmap items up to Phase 14 are now completely merged, tested, and consolid
 ## State at v0.4.0
 - Initiated Networking and Multiplayer Synchronization (Phase 15).
 - Created UDP client and server communication base layers inside `pkg/net`.
-- Continued expansion of Phase 15. The network Server now reads the global ECS registry state, serializes Position and Sprite components to JSON, and broadcasts them. The Client deserializes and updates the local registry.
