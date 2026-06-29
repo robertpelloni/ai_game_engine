@@ -3,6 +3,7 @@ package net
 import (
 	"fmt"
 	"net"
+	"encoding/json"
 
 	"github.com/robertpelloni/ai_game_engine/pkg/ecs"
 )
@@ -43,7 +44,7 @@ func (c *Client) Connect(serverAddr string) error {
 }
 
 func (c *Client) listen() {
-	buf := make([]byte, 1024)
+	buf := make([]byte, 8192) // larger buffer for json
 	for {
 		n, _, err := c.conn.ReadFromUDP(buf)
 		if err != nil {
@@ -51,10 +52,24 @@ func (c *Client) listen() {
 			continue
 		}
 
-		// process state updates
-		msg := string(buf[:n])
-		if msg == "STATE_UPDATE" {
-			// Stub for parsing and updating local registry
+		var state NetworkState
+		err = json.Unmarshal(buf[:n], &state)
+		if err == nil {
+			c.registry.Mu.Lock()
+			for _, ed := range state.Entities {
+				e := ecs.Entity(ed.ID)
+				if int(e) >= len(c.registry.HasPosition) || !c.registry.HasPosition[e] {
+					// Extremely basic creation stub for remote entities
+					c.registry.AddPosition(e, ecs.Position{X: ed.X, Y: ed.Y})
+					if ed.SpriteID != "" {
+						c.registry.AddSprite(e, ecs.SpriteRenderer{SpriteID: ed.SpriteID})
+					}
+				} else {
+					c.registry.Positions[e].X = ed.X
+					c.registry.Positions[e].Y = ed.Y
+				}
+			}
+			c.registry.Mu.Unlock()
 		}
 	}
 }
