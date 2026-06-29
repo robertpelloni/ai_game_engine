@@ -148,3 +148,6 @@
 
 ### Fixed
 - Completed Phase 14 Godot GDExtension CGO Integration in v0.3.1.
+
+### Added
+- Added `godot-go` repository stub for Godot 4.x GDExtension bridge.
