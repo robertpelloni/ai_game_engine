@@ -137,3 +137,6 @@
 ## [0.0.1] - 2024-06-02
 - Initial project structure.
 - Basic ECS and JSON schema definition.
+
+### Added
+- Expanded Phase 12 Dynamic Asset Generation to include mocked procedural generation for 3D Models and Audio via NLP prompts.
