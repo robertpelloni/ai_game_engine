@@ -1,0 +1,9 @@
+{
+  "world": {
+    "grid_spacing": 50,
+    "gravity": [0, 9.8],
+    "viewport": [800, 600],
+    "global_shader": "none"
+  },
+  "entities": []
+}
