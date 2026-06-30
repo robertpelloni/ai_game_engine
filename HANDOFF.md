@@ -29,7 +29,3 @@ Re-ran the executive synchronization protocol to catch the lingering `main` bran
 The tree is now fully clean, all submodules are synchronized recursively, and the local feature branches (`feature/style-trigger-engine`) have been forcefully committed into `main` after popping the stash to preserve work.
 
 All roadmap items up to Phase 14 are now completely merged, tested, and consolidated into `main`.
-
-## State at v0.4.0
-- Initiated Networking and Multiplayer Synchronization (Phase 15).
-- Created UDP client and server communication base layers inside `pkg/net`.

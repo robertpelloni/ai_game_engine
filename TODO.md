@@ -25,6 +25,3 @@
 - [x] Implement Phase 14: Godot GDExtension CGO Integration
   - [x] Update `pkg/godot/bridge.go` to use `import "C"`
   - [x] Define CGO stubs for memory synchronization
-- [x] Implement Phase 15: Networking and Multiplayer Synchronization
-  - [x] Implement basic UDP Server
-  - [x] Implement basic UDP Client

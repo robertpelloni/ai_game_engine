@@ -137,17 +137,3 @@
 ## [0.0.1] - 2024-06-02
 - Initial project structure.
 - Basic ECS and JSON schema definition.
-
-## [0.4.0] - $(date +%Y-%m-%d)
-### Added
-- Created `pkg/net` package containing base `Server` and `Client` structs for UDP networking synchronization (Phase 15).
-
-### Fixed
-- Completed Phase 12 Asset Generation integration with `pkg/engine/assets/generator.go`.
-- Completed Phase 14 Godot GDExtension integration with `pkg/godot/gdextension.go`.
-
-### Fixed
-- Completed Phase 14 Godot GDExtension CGO Integration in v0.3.1.
-
-### Added
-- Added `godot-go` repository stub for Godot 4.x GDExtension bridge.
